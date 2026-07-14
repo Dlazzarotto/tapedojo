@@ -209,3 +209,21 @@ where p.marketing_opt_in = true
 -- · td_save_offers tem user_id como chave primária: 1 oferta por vida.
 -- · Descadastro de marketing: link de 1 clique grava unsubscribed_at
 --   e insere em td_email_suppression. Transacionais continuam.
+
+-- ── Parceiro do Dojo: anúncio recompensado (Fase 2 — config global) ──
+create table if not exists td_partner_ads (
+  id bigint generated always as identity primary key,
+  enabled boolean not null default false,
+  headline text,
+  media_type text not null default 'image' check (media_type in ('image','video')),
+  media_url text not null,
+  link_url text,
+  duration_s integer not null default 30,
+  reward_points integer not null default 20,
+  daily_cap integer not null default 3,
+  audience text[] not null default array['free'],   -- 'free' | 'base' (nunca plus/master)
+  created_at timestamptz not null default now()
+);
+alter table td_partner_ads enable row level security;
+create policy "ads read enabled" on td_partner_ads for select using (enabled = true);
+-- escrita: somente service role (painel do mestre)
