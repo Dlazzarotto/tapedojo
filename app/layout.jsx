@@ -13,7 +13,7 @@ export const viewport = { themeColor: "#12143A" };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR">
+    <html lang="en">
       <body>
         {children}
         <SWRegister />

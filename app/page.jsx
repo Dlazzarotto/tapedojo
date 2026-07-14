@@ -30,8 +30,11 @@ const HL = {
       { name: "Master", pid: "master", desc: "10.000 pontos + regeneração · Arena LIVE (níveis 4–6) · cursos Wyckoff, Steidlmayer e Granville · 1 Sessão Sensei/mês." },
     ],
     cta: "🥋 Começar os 7 dias grátis",
-    plansNoteBR: "Preços para o Brasil — no exterior: US$ 19 / 39 / 89. O pagamento destrava a porta; o exame destrava a sala: nível não se compra.",
-    plansNoteIntl: "Preços internacionais — no Brasil: R$ 47 / 87 / 197. O pagamento destrava a porta; o exame destrava a sala: nível não se compra.",
+    plansNote: "O pagamento destrava a porta; o exame destrava a sala: nível não se compra.",
+    settings: "Configurações", settingsLang: "Idioma", accountTitle: "Conta",
+    accEmail: "E-mail", accPhone: "Telefone", accPass: "Senha",
+    accountSoon: "E-mail, telefone e senha são ativados com as contas na nuvem (em breve). Hoje seu progresso vive neste aparelho.",
+    close: "Fechar",
     note: "Plataforma educacional com cenários sintéticos — não são dados reais de mercado nem recomendação de investimento.",
   },
   en: {
@@ -57,8 +60,11 @@ const HL = {
       { name: "Master", pid: "master", desc: "10,000 points + regeneration · LIVE Arena (levels 4–6) · Wyckoff, Steidlmayer & Granville courses · 1 Sensei Session/month." },
     ],
     cta: "🥋 Start the 7-day free trial",
-    plansNoteBR: "Prices for Brazil — elsewhere: US$ 19 / 39 / 89. Payment unlocks the door; the exam unlocks the room: levels can't be bought.",
-    plansNoteIntl: "International prices — Brazil: R$ 47 / 87 / 197. Payment unlocks the door; the exam unlocks the room: levels can't be bought.",
+    plansNote: "Payment unlocks the door; the exam unlocks the room: levels can't be bought.",
+    settings: "Settings", settingsLang: "Language", accountTitle: "Account",
+    accEmail: "Email", accPhone: "Phone", accPass: "Password",
+    accountSoon: "Email, phone and password activate with cloud accounts (coming soon). Today your progress lives on this device.",
+    close: "Close",
     note: "Educational platform with synthetic scenarios — not real market data and not investment advice.",
   },
   es: {
@@ -84,8 +90,11 @@ const HL = {
       { name: "Master", pid: "master", desc: "10.000 puntos + regeneración · Arena LIVE (niveles 4–6) · cursos Wyckoff, Steidlmayer y Granville · 1 Sesión Sensei/mes." },
     ],
     cta: "🥋 Empezar los 7 días gratis",
-    plansNoteBR: "Precios para Brasil — en el exterior: US$ 19 / 39 / 89. El pago abre la puerta; el examen abre la sala: el nivel no se compra.",
-    plansNoteIntl: "Precios internacionales — Brasil: R$ 47 / 87 / 197. El pago abre la puerta; el examen abre la sala: el nivel no se compra.",
+    plansNote: "El pago abre la puerta; el examen abre la sala: el nivel no se compra.",
+    settings: "Configuración", settingsLang: "Idioma", accountTitle: "Cuenta",
+    accEmail: "Correo", accPhone: "Teléfono", accPass: "Contraseña",
+    accountSoon: "Correo, teléfono y contraseña se activan con las cuentas en la nube (muy pronto). Hoy tu progreso vive en este dispositivo.",
+    close: "Cerrar",
     note: "Plataforma educativa con escenarios sintéticos — no son datos reales de mercado ni recomendación de inversión.",
   },
 };
@@ -148,7 +157,8 @@ function HowItWorks({ T }) {
 }
 
 export default function Home() {
-  const [lang, setLang] = useState("pt");
+  const [lang, setLang] = useState("en");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [geo, setGeo] = useState("");
   const T = HL[lang];
   const isBR = geo === "BR";
@@ -169,7 +179,19 @@ export default function Home() {
 
   return (
     <main style={{ background: HUB.bg, minHeight: "100vh", color: HUB.text, fontFamily: "Inter, system-ui, sans-serif", fontSize: 19, lineHeight: 1.55 }}>
-      <div className="max-w-3xl mx-auto px-5 py-10">
+      <div className="max-w-3xl mx-auto px-5 py-6">
+        <div className="flex items-center justify-end gap-2" style={{ marginBottom: 8 }}>
+          <select aria-label="Language" value={lang} onChange={(e) => changeLang(e.target.value)}
+            style={{ background: HUB.navy, color: "#fff", border: "1px solid " + HUB.grid, borderRadius: 10, fontWeight: 800, fontSize: 15, padding: "10px 12px", minHeight: 44, cursor: "pointer" }}>
+            {Object.keys(HL).map((k) => (
+              <option key={k} value={k}>{LANG_NAMES[k]}</option>
+            ))}
+          </select>
+          <button onClick={() => setSettingsOpen(true)} aria-label={T.settings} title={T.settings}
+            style={{ background: HUB.navy, color: "#fff", border: "1px solid " + HUB.grid, borderRadius: 10, fontSize: 20, minHeight: 44, minWidth: 46, cursor: "pointer" }}>
+            ⚙
+          </button>
+        </div>
         <div className="flex flex-col items-center text-center mb-6">
           <ToriiHome />
           <h1 style={{ fontSize: 42, fontWeight: 800, marginTop: 8 }}>
@@ -178,15 +200,6 @@ export default function Home() {
           <p style={{ color: HUB.orange, fontSize: 21, fontWeight: 700 }}>{T.slogan}</p>
           <p style={{ background: "rgba(244,123,32,0.12)", border: "1px solid " + HUB.orange, color: HUB.text, borderRadius: 12, padding: "10px 16px", fontSize: 16.5, fontWeight: 700, marginTop: 12, maxWidth: 560 }}>{T.trial}</p>
 
-          <div className="flex justify-center gap-2 mt-4" role="group" aria-label="Idioma / Language">
-            {Object.keys(HL).map((k) => (
-              <button key={k} onClick={() => changeLang(k)}
-                style={{ minHeight: 50, fontSize: 17, fontWeight: 800, padding: "10px 18px", borderRadius: 12, border: "none", cursor: "pointer",
-                  background: lang === k ? HUB.orange : HUB.navy, color: "#fff" }}>
-                {LANG_NAMES[k]}
-              </button>
-            ))}
-          </div>
         </div>
 
         <HowItWorks T={T} />
@@ -223,11 +236,39 @@ export default function Home() {
           <Link href="/treinar" style={{ textDecoration: "none" }}>
             <p style={{ background: HUB.orange, color: "#231000", fontWeight: 800, fontSize: 19, textAlign: "center", borderRadius: 14, padding: "16px 20px", marginTop: 16, cursor: "pointer" }}>{T.cta}</p>
           </Link>
-          <p style={{ color: HUB.muted, fontSize: 14.5, textAlign: "center", marginTop: 10 }}>{isBR ? T.plansNoteBR : T.plansNoteIntl}</p>
+          <p style={{ color: HUB.muted, fontSize: 14.5, textAlign: "center", marginTop: 10 }}>{T.plansNote}</p>
         </section>
 
         <p style={{ color: HUB.muted, fontSize: 15.5, marginTop: 28, textAlign: "center" }}>{T.note}</p>
       </div>
+
+      {settingsOpen && (
+        <div role="dialog" aria-label={T.settings}
+          style={{ position: "fixed", inset: 0, background: "rgba(6,7,24,0.9)", zIndex: 70, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: HUB.surface, border: "2px solid " + HUB.grid, borderRadius: 18, maxWidth: 440, width: "100%", padding: 20 }}>
+            <p style={{ fontWeight: 800, fontSize: 22, marginBottom: 14 }}>⚙ {T.settings}</p>
+            <p style={{ color: HUB.muted, fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>{T.settingsLang}</p>
+            <select value={lang} onChange={(e) => changeLang(e.target.value)}
+              style={{ width: "100%", background: HUB.navy, color: "#fff", border: "1px solid " + HUB.grid, borderRadius: 10, fontWeight: 800, fontSize: 16, padding: "12px", marginBottom: 18 }}>
+              {Object.keys(HL).map((k) => (
+                <option key={k} value={k}>{LANG_NAMES[k]}</option>
+              ))}
+            </select>
+            <p style={{ color: HUB.muted, fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>{T.accountTitle}</p>
+            {[T.accEmail, T.accPhone, T.accPass].map((f) => (
+              <div key={f} style={{ marginBottom: 8 }}>
+                <input disabled placeholder={"🔒 " + f}
+                  style={{ width: "100%", background: HUB.bg, color: HUB.muted, border: "1px dashed " + HUB.grid, borderRadius: 10, fontSize: 15.5, padding: "11px 12px" }} />
+              </div>
+            ))}
+            <p style={{ color: HUB.muted, fontSize: 14.5, marginBottom: 14 }}>{T.accountSoon}</p>
+            <button onClick={() => setSettingsOpen(false)}
+              style={{ width: "100%", background: HUB.orange, color: "#231000", fontWeight: 800, fontSize: 17, border: "none", borderRadius: 12, padding: 14, cursor: "pointer", minHeight: 50 }}>
+              {T.close}
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

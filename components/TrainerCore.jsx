@@ -762,7 +762,7 @@ function ToriiMark({ size = 44 }) {
 
 // ═══════════════════ APP ═══════════════════
 export default function App() {
-  const [lang, setLang] = useState("pt");
+  const [lang, setLang] = useState("en");
   const [users, setUsers] = useState([]);
   const [user, setUser] = useState(null);
   const [nameInput, setNameInput] = useState("");
