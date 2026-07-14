@@ -246,3 +246,35 @@ create policy "own state" on td_state for all
 -- ═══ TapeDojo · Admin Dashboard — incremento ═══
 alter table td_profiles add column if not exists country text;
 create index if not exists td_profiles_country on td_profiles (country);
+
+-- ═══ TapeDojo · Preços editáveis — incremento ═══
+create table if not exists td_config (
+  key text primary key,
+  value jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table td_config enable row level security;
+drop policy if exists "config public read" on td_config;
+create policy "config public read" on td_config for select using (true);
+-- escrita: somente service role (rota segura do cockpit)
+
+insert into td_config (key, value) values (
+  'prices',
+  '{"base":{"br":47,"intl":19},"plus":{"br":87,"intl":39},"master":{"br":197,"intl":89}}'::jsonb
+) on conflict (key) do nothing;
+
+-- ═══ TapeDojo · Cortesias (permutas/parcerias) — incremento ═══
+create table if not exists td_grants (
+  id bigint generated always as identity primary key,
+  email text not null,
+  tier text not null check (tier in ('base','plus','master')),
+  note text,
+  expires_at timestamptz,           -- null = permanente
+  created_at timestamptz not null default now()
+);
+create index if not exists td_grants_email on td_grants (lower(email));
+alter table td_grants enable row level security;
+drop policy if exists "own grant read" on td_grants;
+create policy "own grant read" on td_grants for select
+  using (lower(email) = lower(coalesce(auth.email(), '')));
+-- escrita/remoção: somente service role (sala Cortesias do cockpit)

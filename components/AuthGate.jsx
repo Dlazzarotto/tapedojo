@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase, seedCloud, stopCloud } from "@/lib/supabase";
+import { bestGrant } from "@/lib/grants";
 
 const C = { bg: "#12143A", surface: "#1B1E52", navy: "#2D3278", orange: "#F47B20", buy: "#22C55E", sell: "#F05252", text: "#F5F6FF", muted: "#A9AEDB", grid: "#34386F" };
 
@@ -96,6 +97,10 @@ export default function AuthGate({ children }) {
       const country = m ? decodeURIComponent(m[1]) : "";
       if (country) await supabase.from("td_profiles").update({ country }).eq("user_id", s.user.id);
     } catch (e) { /* melhor esforço */ }
+    try {
+      const { data: gr } = await supabase.from("td_grants").select("tier, expires_at");
+      if (typeof window !== "undefined") window.__tdGrant = bestGrant(gr, Date.now());
+    } catch (e) { if (typeof window !== "undefined") window.__tdGrant = null; }
     setSess(s);
   }
 

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { DEFAULT_PRICES, fetchPrices } from "@/lib/prices";
 
 const HUB = { bg: "#12143A", surface: "#1B1E52", orange: "#F47B20", text: "#F5F6FF", muted: "#A9AEDB", grid: "#34386F", navy: "#2D3278" };
 
@@ -110,10 +111,7 @@ const HL = {
 const ROUTES = { treinar: "/treinar", live: "/live", wilder: "/mestres/wilder" };
 
 // vitrine de preços por geografia (cookie td-country, gravado pelo middleware na borda)
-const PLAN_AMOUNT = {
-  br: { base: "R$ 47", plus: "R$ 87", master: "R$ 197" },
-  intl: { base: "US$ 19", plus: "US$ 39", master: "US$ 89" },
-};
+let LIVE_PRICES = DEFAULT_PRICES; // atualizado do td_config ao carregar
 const PLAN_SUFFIX = { pt: "/mês", en: "/mo", es: "/mes" };
 function geoCountry() {
   try {
@@ -197,7 +195,9 @@ export default function Home() {
   const [geo, setGeo] = useState("");
   const T = HL[lang];
   const isBR = geo === "BR";
-  const priceOf = (pid) => (isBR ? PLAN_AMOUNT.br : PLAN_AMOUNT.intl)[pid] + (PLAN_SUFFIX[lang] || "/mo");
+  const [, setPxTick] = useState(0);
+  useEffect(() => { fetchPrices(supabase).then((px) => { LIVE_PRICES = px; setPxTick((t) => t + 1); }); }, []);
+  const priceOf = (pid) => (isBR ? "R$ " + LIVE_PRICES[pid].br : "US$ " + LIVE_PRICES[pid].intl) + (PLAN_SUFFIX[lang] || "/mo");
 
   useEffect(() => {
     try {

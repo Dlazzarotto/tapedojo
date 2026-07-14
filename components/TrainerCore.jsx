@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { DEFAULT_PRICES, fetchPrices } from "@/lib/prices";
+import { applyGrant } from "@/lib/grants";
 
 // ═══════════════════════════════════════════════════════════════
 // TAPEDOJO — v2
@@ -27,13 +30,11 @@ const DAILY_BONUS = 20;     // bônus de login diário (todos os planos)
 // Vitrine de preços por GEOGRAFIA (IP na borda da Vercel), não por idioma:
 // quem fala português mas mora nos EUA/Europa vê o preço internacional.
 // A cobrança final (Fase 2) segue o país do cartão — camada à prova de VPN.
-const PLAN_AMOUNT = {
-  br: { base: "R$ 47", plus: "R$ 87", master: "R$ 197" },
-  intl: { base: "US$ 19", plus: "US$ 39", master: "US$ 89" },
-};
+let LIVE_PRICES = DEFAULT_PRICES; // td_config atualiza ao carregar
 const PLAN_SUFFIX = { pt: "/mês", en: "/mo", es: "/mes" };
 function planPrice(pid, lang, geo) {
-  return (geo === "BR" ? PLAN_AMOUNT.br : PLAN_AMOUNT.intl)[pid] + (PLAN_SUFFIX[lang] || "/mo");
+  const v = geo === "BR" ? "R$ " + LIVE_PRICES[pid].br : "US$ " + LIVE_PRICES[pid].intl;
+  return v + (PLAN_SUFFIX[lang] || "/mo");
 }
 function geoCountry() {
   try {
@@ -117,6 +118,7 @@ const L = {
       creditsText: "Os pontos renovam no início de cada mês conforme o plano. Você pode esperar a renovação, comprar um pacote avulso ou subir de plano — quem acerta mais, treina mais com os mesmos pontos.",
       buyCredits: "Comprar " + CREDIT_PACK + " pontos (demonstração)",
       bonusDay: "🎁 Bônus diário: +" + DAILY_BONUS + " pontos",
+      grantLabel: "Cortesia ativa:", grantUntil: "até", grantForever: "permanente",
       beltFrozen: "Faixa congelada — taxa recente {r}% (mínimo 60% nos últimos 60 para subir)",
       ptsRegen: "⚡ Master: regeneração ativa — +" + REGEN_PER_HOUR + " pontos por hora.",
       adWatch: "Assistir parceiro", adOf: "de", adDone: "Recompensa creditada!", adHead: "Parceiro do Dojo", adSkipNote: "Assista até o fim para receber os pontos.",
@@ -231,6 +233,7 @@ const L = {
       creditsText: "Points renew at the start of each month based on your plan. You can wait for renewal, buy a one-off pack, or upgrade — the better you read, the more you train with the same points.",
       buyCredits: "Buy " + CREDIT_PACK + " points (demo)",
       bonusDay: "🎁 Daily bonus: +" + DAILY_BONUS + " points",
+      grantLabel: "Courtesy access:", grantUntil: "until", grantForever: "permanent",
       beltFrozen: "Belt frozen — recent rate {r}% (minimum 60% over the last 60 to advance)",
       ptsRegen: "⚡ Master: regeneration active — +" + REGEN_PER_HOUR + " points per hour.",
       adWatch: "Watch partner", adOf: "of", adDone: "Reward credited!", adHead: "Dojo Partner", adSkipNote: "Watch to the end to receive the points.",
@@ -345,6 +348,7 @@ const L = {
       creditsText: "Los puntos se renuevan al inicio de cada mes según tu plan. Puedes esperar la renovación, comprar un paquete suelto o subir de plan — quien acierta más, entrena más con los mismos puntos.",
       buyCredits: "Comprar " + CREDIT_PACK + " puntos (demostración)",
       bonusDay: "🎁 Bono diario: +" + DAILY_BONUS + " puntos",
+      grantLabel: "Cortesía activa:", grantUntil: "hasta", grantForever: "permanente",
       beltFrozen: "Cinturón congelado — tasa reciente {r}% (mínimo 60% en los últimos 60 para subir)",
       ptsRegen: "⚡ Master: regeneración activa — +" + REGEN_PER_HOUR + " puntos por hora.",
       adWatch: "Ver socio", adOf: "de", adDone: "¡Recompensa acreditada!", adHead: "Socio del Dojo", adSkipNote: "Mira hasta el final para recibir los puntos.",
@@ -798,6 +802,8 @@ export default function App() {
   }, []);
   useEffect(() => { sGet("td:ad:config").then((c) => setAdCfg(c)); }, []);
   useEffect(() => { setGeo(geoCountry()); }, []);
+  const [, setPxTick] = useState(0);
+  useEffect(() => { fetchPrices(supabase).then((px) => { LIVE_PRICES = px; setPxTick((t) => t + 1); }); }, []);
 
   function changeLang(v) { setLang(v); sSet("td:lang", v); }
 
@@ -815,6 +821,7 @@ export default function App() {
     if (typeof d.beltIdx !== "number") d.beltIdx = beltFromCorrect(d.correct); // migração
     if (!Array.isArray(d.recent)) d.recent = [];
     if (grantDailyBonus(d, todayStr())) setBonusFlash(true);
+    applyGrant(d, (typeof window !== "undefined" && window.__tdGrant) || null, Date.now(), ALLOWANCE);
     applyRegen(d, Date.now());
     setData(d); setUser(nm);
     serveScenario(d);
@@ -1029,6 +1036,12 @@ export default function App() {
         </div>
         {bonusFlash && (
           <p style={{ color: C.buy, fontWeight: 800, marginTop: -6, marginBottom: 12, fontSize: 17 }}>{U.bonusDay}</p>
+        )}
+        {data.grant && (
+          <p style={{ color: C.orange, fontWeight: 800, marginTop: -6, marginBottom: 12, fontSize: 16 }}>
+            🎁 {U.grantLabel} {U.plans[data.grant.tier] ? U.plans[data.grant.tier].name : data.grant.tier}
+            {data.grant.until ? " · " + U.grantUntil + " " + new Date(data.grant.until).toLocaleDateString() : " · " + U.grantForever}
+          </p>
         )}
         {beltFrozen && (
           <p style={{ color: C.orange, fontWeight: 700, marginTop: -6, marginBottom: 12, fontSize: 16 }}>

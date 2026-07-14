@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import AdminDashboard from "@/components/AdminDashboard";
+import { DEFAULT_PRICES } from "@/lib/prices";
 
 // ═══════════════════════════════════════════════════════════════
 // TAPEDOJO — PAINEL DO MESTRE · Marketing (Parceiro do Dojo)
@@ -43,6 +44,66 @@ export default function AdminPanel() {
   const [saved, setSaved] = useState(false);
   const [preview, setPreview] = useState(false);
   const [section, setSection] = useState("dash"); // dash | mkt | fin | arch
+  const [fin, setFin] = useState({ prices: null, msg: null, err: null });
+  const [vip, setVip] = useState({ list: null, email: "", tier: "master", days: 90, note: "", msg: null, err: null });
+
+  function dashToken() {
+    try { return sessionStorage.getItem("td:dash:token") || ""; } catch (e) { return ""; }
+  }
+
+  useEffect(() => {
+    if (section !== "vip" || vip.list) return;
+    const tk = dashToken();
+    if (!tk) { setVip((v) => ({ ...v, err: "token" })); return; }
+    fetch("/api/admin/grants", { headers: { "x-dojo-token": tk } })
+      .then((r) => r.json().then((j) => ({ ok: r.ok, j })))
+      .then(({ ok, j }) => setVip((v) => (ok ? { ...v, list: j.grants, err: null } : { ...v, err: j.error || "erro" })))
+      .catch(() => setVip((v) => ({ ...v, err: "network" })));
+  }, [section]);
+
+  async function grantAccess() {
+    const tk = dashToken();
+    setVip((v) => ({ ...v, msg: null, err: null }));
+    const body = { email: vip.email, tier: vip.tier, days: vip.days === 0 ? null : vip.days, note: vip.note };
+    const r = await fetch("/api/admin/grants", { method: "POST", headers: { "Content-Type": "application/json", "x-dojo-token": tk }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (r.ok) setVip((v) => ({ ...v, list: [j.grant, ...(v.list || [])], email: "", note: "", msg: "✔ Cortesia concedida — vale no próximo login do parceiro (ou no primeiro cadastro com esse e-mail)." }));
+    else setVip((v) => ({ ...v, err: j.error || "erro" }));
+  }
+
+  async function revokeGrant(id) {
+    const tk = dashToken();
+    const r = await fetch("/api/admin/grants?id=" + id, { method: "DELETE", headers: { "x-dojo-token": tk } });
+    if (r.ok) setVip((v) => ({ ...v, list: (v.list || []).filter((g) => g.id !== id), msg: "Cortesia revogada." }));
+  }
+
+  useEffect(() => {
+    if (section !== "fin" || fin.prices) return;
+    let tk = "";
+    try { tk = sessionStorage.getItem("td:dash:token") || ""; } catch (e) { /* ok */ }
+    if (!tk) { setFin({ prices: null, msg: null, err: "token" }); return; }
+    fetch("/api/admin/config", { headers: { "x-dojo-token": tk } })
+      .then((r) => r.json().then((j) => ({ ok: r.ok, j })))
+      .then(({ ok, j }) => setFin(ok ? { prices: j.prices, msg: null, err: null } : { prices: null, msg: null, err: j.error || "erro" }))
+      .catch(() => setFin({ prices: null, msg: null, err: "network" }));
+  }, [section]);
+
+  function setPx(t, z, v) {
+    setFin((f) => ({ ...f, msg: null, prices: { ...f.prices, [t]: { ...f.prices[t], [z]: v } } }));
+  }
+
+  async function savePrices() {
+    let tk = "";
+    try { tk = sessionStorage.getItem("td:dash:token") || ""; } catch (e) { /* ok */ }
+    const clean = {};
+    ["base", "plus", "master"].forEach((t) => {
+      clean[t] = { br: parseInt(fin.prices[t].br, 10) || DEFAULT_PRICES[t].br, intl: parseInt(fin.prices[t].intl, 10) || DEFAULT_PRICES[t].intl };
+    });
+    const r = await fetch("/api/admin/config", { method: "POST", headers: { "Content-Type": "application/json", "x-dojo-token": tk }, body: JSON.stringify({ prices: clean }) });
+    const j = await r.json();
+    if (r.ok) setFin({ prices: j.prices, msg: "✔ Preços publicados — o site inteiro já está vendo os novos valores.", err: null });
+    else setFin((f) => ({ ...f, err: j.error || "erro", msg: null }));
+  }
   const [left, setLeft] = useState(0);
 
   useEffect(() => { setCfg(load()); }, []);
@@ -96,7 +157,7 @@ export default function AdminPanel() {
           <span style={{ color: C.orange, fontWeight: 800, fontSize: 15, border: "2px solid " + C.orange, borderRadius: 999, padding: "2px 12px", marginLeft: 10, verticalAlign: "middle" }}>PAINEL DO MESTRE</span>
         </p>
         <div className="flex flex-wrap items-center gap-2" style={{ margin: "10px 0 18px" }}>
-          {[["dash", "📊 Dashboard"], ["mkt", "📣 Marketing"], ["fin", "💰 Financeiro"]].map(([id, nm]) => (
+          {[["dash", "📊 Dashboard"], ["mkt", "📣 Marketing"], ["fin", "💰 Financeiro"], ["vip", "🎁 Cortesias"]].map(([id, nm]) => (
             <button key={id} onClick={() => setSection(id)}
               style={{ ...btn, minHeight: 46, padding: "8px 16px", fontSize: 16, background: section === id ? C.orange : C.navy, color: section === id ? "#231000" : "#fff" }}>
               {nm}
@@ -112,25 +173,112 @@ export default function AdminPanel() {
 
         {section === "fin" && (
           <section style={{ background: C.surface, border: "1px solid " + C.grid, borderRadius: 18, padding: 20 }}>
-            <p style={{ fontWeight: 800, fontSize: 20, marginBottom: 10 }}>💰 Financeiro — tabela vigente</p>
-            {[
-              ["Base", "R$ 47/mês · US$ 19/mo", "1.000 pontos/mês"],
-              ["Plus", "R$ 87/mês · US$ 39/mo", "3.000 pontos/mês — a âncora"],
-              ["Master", "R$ 197/mês · US$ 89/mo", "10.000 pts + regeneração · Arena · 4 cursos · 1 Sensei/mês"],
-              ["Curso Avulso", "R$ 985 · US$ 445 (5× Master)", "6 meses de treino + apostila para sempre"],
-              ["Créditos", "pacote de 500 pontos", "micro-transação"],
-            ].map(([n, v, d]) => (
-              <div key={n} style={{ borderBottom: "1px solid " + C.grid, padding: "10px 0" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                  <span style={{ fontWeight: 800 }}>{n}</span>
-                  <span style={{ color: C.orange, fontWeight: 800, textAlign: "right" }}>{v}</span>
+            <p style={{ fontWeight: 800, fontSize: 20, marginBottom: 4 }}>💰 Financeiro — preços vivos</p>
+            <p style={{ color: C.muted, fontSize: 14.5, marginBottom: 14 }}>
+              Fonte da verdade: td_config no Supabase. Salvar aqui muda o site inteiro em segundos — sem código, sem deploy. Cliente existente mantém o preço contratado (regra da 2B/Stripe).
+            </p>
+            {fin.err === "token" && <p style={{ color: C.orange, fontWeight: 700 }}>Abra o 📊 Dashboard e informe o token uma vez — o Financeiro usa a mesma chave.</p>}
+            {fin.err && fin.err !== "token" && <p style={{ color: C.sell, fontWeight: 700 }}>Falha: {fin.err}</p>}
+            {!fin.prices && !fin.err && <p style={{ color: C.muted }}>Carregando preços…</p>}
+            {fin.prices && (
+              <div>
+                {["base", "plus", "master"].map((t) => (
+                  <div key={t} className="grid grid-cols-3 gap-3 items-center" style={{ borderBottom: "1px solid " + C.grid, padding: "10px 0" }}>
+                    <span style={{ fontWeight: 800, textTransform: "capitalize" }}>{t}</span>
+                    <div>
+                      <label style={{ color: C.muted, fontSize: 12.5, fontWeight: 800 }}>R$ / mês (BR)</label>
+                      <input type="number" min="1" value={fin.prices[t].br} onChange={(e) => setPx(t, "br", e.target.value)}
+                        style={{ width: "100%", fontSize: 17, padding: "10px 12px", borderRadius: 10, border: "2px solid " + C.grid, background: C.bg, color: C.text }} />
+                    </div>
+                    <div>
+                      <label style={{ color: C.muted, fontSize: 12.5, fontWeight: 800 }}>US$ / mo (exterior)</label>
+                      <input type="number" min="1" value={fin.prices[t].intl} onChange={(e) => setPx(t, "intl", e.target.value)}
+                        style={{ width: "100%", fontSize: 17, padding: "10px 12px", borderRadius: 10, border: "2px solid " + C.grid, background: C.bg, color: C.text }} />
+                    </div>
+                  </div>
+                ))}
+                <div style={{ background: C.card, borderRadius: 12, padding: 12, margin: "12px 0" }}>
+                  <p style={{ fontWeight: 800 }}>Curso Avulso (automático — 5× Master)</p>
+                  <p style={{ color: C.orange, fontWeight: 800, fontSize: 18 }}>
+                    R$ {(parseInt(fin.prices.master.br, 10) || 0) * 5} · US$ {(parseInt(fin.prices.master.intl, 10) || 0) * 5}
+                  </p>
+                  <p style={{ color: C.muted, fontSize: 13.5 }}>6 meses de treino + apostila para sempre. Créditos: pacote de 500 pontos.</p>
                 </div>
-                <p style={{ color: C.muted, fontSize: 14.5 }}>{d}</p>
+                <button onClick={savePrices}
+                  style={{ ...btn, background: C.buy, color: "#06220F", padding: "14px 26px" }}>
+                  💾 Publicar preços no site
+                </button>
+                {fin.msg && <p style={{ color: C.buy, fontWeight: 800, marginTop: 10 }}>{fin.msg}</p>}
+              </div>
+            )}
+          </section>
+        )}
+
+        {section === "vip" && (
+          <section style={{ background: C.surface, border: "1px solid " + C.grid, borderRadius: 18, padding: 20 }}>
+            <p style={{ fontWeight: 800, fontSize: 20, marginBottom: 4 }}>🎁 Cortesias — acesso para parceiros</p>
+            <p style={{ color: C.muted, fontSize: 14.5, marginBottom: 14 }}>
+              Permuta de anúncio, imprensa, prêmios: o e-mail ganha o nível pelo prazo escolhido — mesmo antes de criar a conta. Revogar corta no próximo login.
+            </p>
+            {vip.err === "token" && <p style={{ color: C.orange, fontWeight: 700 }}>Abra o 📊 Dashboard e informe o token uma vez — as Cortesias usam a mesma chave.</p>}
+            {vip.err && vip.err !== "token" && <p style={{ color: C.sell, fontWeight: 700 }}>Falha: {vip.err}</p>}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ marginBottom: 10 }}>
+              <div>
+                <label style={{ color: C.muted, fontSize: 12.5, fontWeight: 800 }}>E-MAIL DO PARCEIRO</label>
+                <input value={vip.email} onChange={(e) => setVip((v) => ({ ...v, email: e.target.value }))} placeholder="parceiro@exemplo.com"
+                  style={{ width: "100%", fontSize: 17, padding: "11px 12px", borderRadius: 10, border: "2px solid " + C.grid, background: C.bg, color: C.text }} />
+              </div>
+              <div>
+                <label style={{ color: C.muted, fontSize: 12.5, fontWeight: 800 }}>NOTA (ex.: permuta anúncio Q3)</label>
+                <input value={vip.note} onChange={(e) => setVip((v) => ({ ...v, note: e.target.value }))} placeholder="motivo/contrato"
+                  style={{ width: "100%", fontSize: 17, padding: "11px 12px", borderRadius: 10, border: "2px solid " + C.grid, background: C.bg, color: C.text }} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 12 }}>
+              <div>
+                <label style={{ color: C.muted, fontSize: 12.5, fontWeight: 800 }}>NÍVEL</label>
+                <select value={vip.tier} onChange={(e) => setVip((v) => ({ ...v, tier: e.target.value }))}
+                  style={{ width: "100%", fontSize: 16, padding: "11px 10px", borderRadius: 10, border: "2px solid " + C.grid, background: C.bg, color: C.text }}>
+                  <option value="base">Base</option>
+                  <option value="plus">Plus</option>
+                  <option value="master">Master</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ color: C.muted, fontSize: 12.5, fontWeight: 800 }}>PRAZO</label>
+                <select value={vip.days} onChange={(e) => setVip((v) => ({ ...v, days: parseInt(e.target.value, 10) }))}
+                  style={{ width: "100%", fontSize: 16, padding: "11px 10px", borderRadius: 10, border: "2px solid " + C.grid, background: C.bg, color: C.text }}>
+                  <option value={30}>30 dias</option>
+                  <option value={90}>90 dias</option>
+                  <option value={180}>180 dias</option>
+                  <option value={365}>1 ano</option>
+                  <option value={0}>Permanente</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: "span 2", display: "flex", alignItems: "end" }}>
+                <button onClick={grantAccess} disabled={!vip.email.includes("@")}
+                  style={{ ...btn, width: "100%", background: C.buy, color: "#06220F", padding: "12px 16px", opacity: vip.email.includes("@") ? 1 : 0.5 }}>
+                  🎁 Conceder acesso
+                </button>
+              </div>
+            </div>
+            {vip.msg && <p style={{ color: C.buy, fontWeight: 800, marginBottom: 10 }}>{vip.msg}</p>}
+
+            <p style={{ fontWeight: 800, fontSize: 16, margin: "8px 0" }}>Cortesias concedidas</p>
+            {(!vip.list || vip.list.length === 0) && <p style={{ color: C.muted, fontSize: 14.5 }}>Nenhuma ainda — a primeira permuta aparece aqui.</p>}
+            {(vip.list || []).map((g) => (
+              <div key={g.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, borderBottom: "1px solid " + C.grid, padding: "8px 0", fontSize: 15 }}>
+                <span>
+                  <b>{g.email}</b> · <span style={{ color: C.orange, fontWeight: 800, textTransform: "capitalize" }}>{g.tier}</span>
+                  <span style={{ color: C.muted }}> · {g.expires_at ? "até " + new Date(g.expires_at).toLocaleDateString() : "permanente"}{g.note ? " · " + g.note : ""}</span>
+                </span>
+                <button onClick={() => revokeGrant(g.id)}
+                  style={{ background: "none", border: "1px solid " + C.sell, color: C.sell, borderRadius: 8, fontSize: 13, fontWeight: 800, padding: "5px 10px", cursor: "pointer" }}>
+                  Revogar
+                </button>
               </div>
             ))}
-            <p style={{ color: C.muted, fontSize: 14, marginTop: 12 }}>
-              Números vivos (MRR, feito, a receber) estão no 📊 Dashboard. Preços regionais cobrados pelo país do cartão via MoR — Fase 2B. Alterar preço = editar PLAN_AMOUNT no código + esta tabela.
-            </p>
           </section>
         )}
 
@@ -142,6 +290,7 @@ export default function AdminPanel() {
                 ["📊 Dashboard", "Mapa-múndi, online agora, pizza por nível, financeiro vivo.", "dash", true],
                 ["📣 Marketing — Parceiro do Dojo", "Anúncio recompensado: mídia, público, créditos, teto.", "mkt", true],
                 ["💰 Financeiro", "Tabela de preços vigente e regras comerciais.", "fin", true],
+                ["🎁 Cortesias — parcerias", "Conceda Base/Plus/Master por e-mail: permuta de anúncio, imprensa, prêmios.", "vip", true],
                 ["👥 Clientes & Segmentos", "As 6 listas de ciclo de vida com ação por segmento — chega com o Admin v2.1.", null, false],
                 ["🎫 Reclamações", "Tickets do bot de ajuda com protocolo e status — na fila junto do help.", null, false],
                 ["📚 Cursos & Avulsos", "Compras, certificados e relógios de 6 meses vencendo — liga na Fase 2B.", null, false],
