@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import AdminDashboard from "@/components/AdminDashboard";
 
 // ═══════════════════════════════════════════════════════════════
 // TAPEDOJO — PAINEL DO MESTRE · Marketing (Parceiro do Dojo)
@@ -41,6 +42,7 @@ export default function AdminPanel() {
   const [cfg, setCfg] = useState(DEFAULT_CFG);
   const [saved, setSaved] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [section, setSection] = useState("dash"); // dash | mkt | fin | arch
   const [left, setLeft] = useState(0);
 
   useEffect(() => { setCfg(load()); }, []);
@@ -91,12 +93,79 @@ export default function AdminPanel() {
       <div className="max-w-3xl mx-auto px-4 py-6">
         <p style={{ fontSize: 26, fontWeight: 800 }}>
           Tape<span style={{ color: C.orange }}>Dojo</span>
-          <span style={{ color: C.orange, fontWeight: 800, fontSize: 15, border: "2px solid " + C.orange, borderRadius: 999, padding: "2px 12px", marginLeft: 10, verticalAlign: "middle" }}>PAINEL DO MESTRE · MARKETING</span>
+          <span style={{ color: C.orange, fontWeight: 800, fontSize: 15, border: "2px solid " + C.orange, borderRadius: 999, padding: "2px 12px", marginLeft: 10, verticalAlign: "middle" }}>PAINEL DO MESTRE</span>
         </p>
+        <div className="flex flex-wrap items-center gap-2" style={{ margin: "10px 0 18px" }}>
+          {[["dash", "📊 Dashboard"], ["mkt", "📣 Marketing"], ["fin", "💰 Financeiro"]].map(([id, nm]) => (
+            <button key={id} onClick={() => setSection(id)}
+              style={{ ...btn, minHeight: 46, padding: "8px 16px", fontSize: 16, background: section === id ? C.orange : C.navy, color: section === id ? "#231000" : "#fff" }}>
+              {nm}
+            </button>
+          ))}
+          <button onClick={() => setSection("arch")} aria-label="Arquitetura do negócio" title="Arquitetura do negócio"
+            style={{ ...btn, minHeight: 46, minWidth: 48, fontSize: 20, background: section === "arch" ? C.orange : C.navy, color: section === "arch" ? "#231000" : "#fff", marginLeft: "auto" }}>
+            ⚙
+          </button>
+        </div>
+
+        {section === "dash" && <AdminDashboard />}
+
+        {section === "fin" && (
+          <section style={{ background: C.surface, border: "1px solid " + C.grid, borderRadius: 18, padding: 20 }}>
+            <p style={{ fontWeight: 800, fontSize: 20, marginBottom: 10 }}>💰 Financeiro — tabela vigente</p>
+            {[
+              ["Base", "R$ 47/mês · US$ 19/mo", "1.000 pontos/mês"],
+              ["Plus", "R$ 87/mês · US$ 39/mo", "3.000 pontos/mês — a âncora"],
+              ["Master", "R$ 197/mês · US$ 89/mo", "10.000 pts + regeneração · Arena · 4 cursos · 1 Sensei/mês"],
+              ["Curso Avulso", "R$ 985 · US$ 445 (5× Master)", "6 meses de treino + apostila para sempre"],
+              ["Créditos", "pacote de 500 pontos", "micro-transação"],
+            ].map(([n, v, d]) => (
+              <div key={n} style={{ borderBottom: "1px solid " + C.grid, padding: "10px 0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                  <span style={{ fontWeight: 800 }}>{n}</span>
+                  <span style={{ color: C.orange, fontWeight: 800, textAlign: "right" }}>{v}</span>
+                </div>
+                <p style={{ color: C.muted, fontSize: 14.5 }}>{d}</p>
+              </div>
+            ))}
+            <p style={{ color: C.muted, fontSize: 14, marginTop: 12 }}>
+              Números vivos (MRR, feito, a receber) estão no 📊 Dashboard. Preços regionais cobrados pelo país do cartão via MoR — Fase 2B. Alterar preço = editar PLAN_AMOUNT no código + esta tabela.
+            </p>
+          </section>
+        )}
+
+        {section === "arch" && (
+          <section>
+            <p style={{ fontWeight: 800, fontSize: 20, marginBottom: 12 }}>⚙ Arquitetura do negócio</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                ["📊 Dashboard", "Mapa-múndi, online agora, pizza por nível, financeiro vivo.", "dash", true],
+                ["📣 Marketing — Parceiro do Dojo", "Anúncio recompensado: mídia, público, créditos, teto.", "mkt", true],
+                ["💰 Financeiro", "Tabela de preços vigente e regras comerciais.", "fin", true],
+                ["👥 Clientes & Segmentos", "As 6 listas de ciclo de vida com ação por segmento — chega com o Admin v2.1.", null, false],
+                ["🎫 Reclamações", "Tickets do bot de ajuda com protocolo e status — na fila junto do help.", null, false],
+                ["📚 Cursos & Avulsos", "Compras, certificados e relógios de 6 meses vencendo — liga na Fase 2B.", null, false],
+                ["🔌 Integrações", "Supabase ✔ ativo · Stripe (2B) · Lojas iOS/Android (Fase 3) · MoR (2B).", null, false],
+                ["🔐 Sistema", "Senha do painel: ADMIN_PASS no código · Token do dashboard: ADMIN_DASH_TOKEN na Vercel · service_role só no servidor.", null, false],
+              ].map(([t, d, go, on]) => (
+                <div key={t} onClick={() => go && setSection(go)}
+                  style={{ background: C.surface, border: "1px solid " + (on ? C.orange : C.grid), borderRadius: 16, padding: 16, cursor: go ? "pointer" : "default", opacity: on ? 1 : 0.75 }}>
+                  <p style={{ fontWeight: 800, fontSize: 17, marginBottom: 4 }}>{t}</p>
+                  <p style={{ color: C.muted, fontSize: 14.5 }}>{d}</p>
+                  {!on && <p style={{ color: C.orange, fontWeight: 800, fontSize: 12.5, marginTop: 6 }}>EM CONSTRUÇÃO</p>}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {section === "mkt" && (
         <p style={{ color: C.muted, fontSize: 15.5, margin: "6px 0 18px" }}>
           Anúncio recompensado (Parceiro do Dojo). Nesta v1 a configuração vale neste navegador — a Fase 2 grava no Supabase e publica para todos os alunos. Plus e Master nunca veem anúncio.
         </p>
+        )}
 
+        {section === "mkt" && (
         <section style={{ background: C.surface, border: "1px solid " + C.grid, borderRadius: 18, padding: 20 }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
             <span style={{ fontWeight: 800, fontSize: 20 }}>Status do anúncio</span>
@@ -180,10 +249,13 @@ export default function AdminPanel() {
             {saved && <span style={{ color: C.buy, fontWeight: 800, alignSelf: "center" }}>✔ Salvo</span>}
           </div>
         </section>
+        )}
 
+        {section === "mkt" && (
         <p style={{ color: C.muted, fontSize: 14.5, marginTop: 16 }}>
           Regras da casa: anúncio só para Grátis/Base (Plus e Master compram silêncio), sempre recompensado e com teto diário — o dojo não vira fazenda de propaganda. Parceiros curados por você, um a um.
         </p>
+        )}
       </div>
 
       {preview && (

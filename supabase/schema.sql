@@ -242,3 +242,7 @@ alter table td_state enable row level security;
 drop policy if exists "own state" on td_state;
 create policy "own state" on td_state for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ═══ TapeDojo · Admin Dashboard — incremento ═══
+alter table td_profiles add column if not exists country text;
+create index if not exists td_profiles_country on td_profiles (country);

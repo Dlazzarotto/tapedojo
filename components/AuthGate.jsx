@@ -92,6 +92,9 @@ export default function AuthGate({ children }) {
         { user_id: s.user.id, display_name: nm, lang, points_month: monthKey(), marketing_opt_in: !!(s.user.user_metadata && s.user.user_metadata.marketing_opt_in) },
         { onConflict: "user_id", ignoreDuplicates: true }
       );
+      const m = document.cookie.match(/(?:^|; )td-country=([^;]+)/);
+      const country = m ? decodeURIComponent(m[1]) : "";
+      if (country) await supabase.from("td_profiles").update({ country }).eq("user_id", s.user.id);
     } catch (e) { /* melhor esforço */ }
     setSess(s);
   }
