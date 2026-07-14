@@ -38,6 +38,18 @@ const BELT_COLORS = ["#F5F6FF", "#FACC15", "#F47B20", "#22C55E", "#3B82F6", "#8B
 
 const CAT_KEYS = ["absorcao", "divergencia", "iniciativa", "exaustao", "pullback", "mistos"];
 
+// memória de variação: evita repetir o mesmo texto de tape em sequência no mesmo tema
+const LAST_VAR = {};
+const VAR_SLOTS = 9; // variações por tema no idioma principal
+function pickVariation(cat) {
+  let v = Math.floor(Math.random() * 97), tries = 0;
+  while (LAST_VAR[cat] !== undefined && v % VAR_SLOTS === LAST_VAR[cat] % VAR_SLOTS && tries < 12) {
+    v = Math.floor(Math.random() * 97); tries++;
+  }
+  LAST_VAR[cat] = v;
+  return v;
+}
+
 const READS = {
   absorcao: "Tom Williams — Master the Markets · Wyckoff",
   divergencia: "Anna Coulling — Volume Price Analysis",
@@ -100,8 +112,8 @@ const L = {
     cats: {
       absorcao: {
         name: "Absorção em extremo",
-        tapeBuy: ["Lotes grandes agredindo o bid sem parar, mas o preço não faz nova mínima — a oferta passiva de compra recarrega no mesmo nível.", "Vendedores despejam lotes pesados no bid há vários minutos e o preço simplesmente não cede — cada agressão encontra compra passiva esperando no mesmo nível.", "O times & trades mostra vendas agressivas em série no fundo, mas o print de nova mínima não sai — a fila de compra do book é recomposta assim que consumida."],
-        tapeSell: ["Lotes grandes agredindo o ask sem parar, mas o preço não faz nova máxima — a oferta passiva de venda recarrega no mesmo nível.", "Compradores despejam lotes pesados no ask há vários minutos e o preço simplesmente não avança — cada agressão encontra venda passiva esperando no mesmo nível.", "O times & trades mostra compras agressivas em série no topo, mas o print de nova máxima não sai — a fila de venda do book é recomposta assim que consumida."],
+        tapeBuy: ["Lotes grandes agredindo o bid sem parar, mas o preço não faz nova mínima — a oferta passiva de compra recarrega no mesmo nível.", "Vendedores despejam lotes pesados no bid há vários minutos e o preço simplesmente não cede — cada agressão encontra compra passiva esperando no mesmo nível.", "O times & trades mostra vendas agressivas em série no fundo, mas o print de nova mínima não sai — a fila de compra do book é recomposta assim que consumida.", "Ordem grande de venda atrás de ordem grande de venda — e a mínima do dia continua intacta; alguém enche o caminhão em silêncio.", "A cada leva de venda agressiva o book de compra some do nível… e reaparece recarregado segundos depois, sempre no mesmo preço.", "Pressão vendedora óbvia no tape, mas o candle não estica: as vendas somem dentro de uma parede de compra invisível.", "Iceberg no bid: o tape imprime venda atrás de venda e a cotação devolve centavos — o vendedor cansa antes do comprador.", "Volume gigante no fundo com preço parado: o leilão encontrou um comprador do tamanho do mercado.", "As vendas batem no mesmo nível como onda em quebra-mar — muito barulho no tape, nenhum print de nova mínima."],
+        tapeSell: ["Lotes grandes agredindo o ask sem parar, mas o preço não faz nova máxima — a oferta passiva de venda recarrega no mesmo nível.", "Compradores despejam lotes pesados no ask há vários minutos e o preço simplesmente não avança — cada agressão encontra venda passiva esperando no mesmo nível.", "O times & trades mostra compras agressivas em série no topo, mas o print de nova máxima não sai — a fila de venda do book é recomposta assim que consumida.", "Ordem grande de compra atrás de ordem grande de compra — e a máxima segue intacta; alguém distribui em silêncio.", "A cada leva de compra agressiva o book de venda some do nível… e reaparece recarregado segundos depois, no mesmo preço.", "Pressão compradora óbvia no tape, mas o candle não estica: as compras somem dentro de uma parede de venda invisível.", "Iceberg no ask: o tape imprime compra atrás de compra e a cotação devolve centavos — o comprador cansa antes do vendedor.", "Volume gigante no topo com preço parado: o leilão encontrou um vendedor do tamanho do mercado.", "As compras batem no mesmo nível como onda em quebra-mar — muito barulho no tape, nenhum print de nova máxima."],
         expBuy: "O volume explodiu com delta fortemente NEGATIVO, mas o preço não caiu: range pequeno e fechamento no terço superior. Esforço sem resultado — um participante grande compra passivamente toda a agressão vendedora. Esgotada a agressão, o caminho de menor resistência é para cima.",
         expSell: "O volume explodiu com delta fortemente POSITIVO, mas o preço não subiu: range pequeno e fechamento no terço inferior. Esforço sem resultado — um participante grande vende passivamente para toda a agressão compradora. O caminho de menor resistência é para baixo.",
         watch: "Absorção vale enquanto o nível segura. Se o extremo romper, a leitura está invalidada.",
@@ -110,8 +122,8 @@ const L = {
       },
       divergencia: {
         name: "Divergência de delta",
-        tapeSell: ["O preço imprime máximas mais altas, mas a agressão compradora fica mais rala a cada avanço — os lotes agressores encolhem.", "Cada nova máxima sai com menos negócios agressores que a anterior — o preço segue avançando enquanto a participação compradora míngua.", "O preço renova o topo, porém o tape mostra agressão compradora cada vez menor a cada perna — os prints grandes sumiram."],
-        tapeBuy: ["O preço imprime mínimas mais baixas, mas a agressão vendedora fica mais rala a cada queda — os lotes agressores encolhem.", "Cada nova mínima sai com menos negócios agressores que a anterior — o preço segue caindo enquanto a participação vendedora míngua.", "O preço renova o fundo, porém o tape mostra agressão vendedora cada vez menor a cada perna — os prints grandes sumiram."],
+        tapeSell: ["O preço imprime máximas mais altas, mas a agressão compradora fica mais rala a cada avanço — os lotes agressores encolhem.", "Cada nova máxima sai com menos negócios agressores que a anterior — o preço segue avançando enquanto a participação compradora míngua.", "O preço renova o topo, porém o tape mostra agressão compradora cada vez menor a cada perna — os prints grandes sumiram.", "Topo atrás de topo no gráfico, mas cada esticada sai com menos lotes compradores — a alta anda por inércia, não por agressão.", "O delta comprador encolhe a cada perna de alta: o preço ainda avança, mas quem empurrava já não aparece no tape.", "Nova máxima no print, agressão pela metade: os compradores grandes sumiram e sobrou varejo esticando o movimento.", "A cada renovação do topo o tape responde mais fraco — menos negócios, lotes menores, pressão evaporando.", "O preço fura a resistência, mas o volume agressor de compra é uma fração do que era duas pernas atrás.", "Alta com combustível acabando: máximas marginais, delta comprador cada vez mais raso a cada tentativa."],
+        tapeBuy: ["O preço imprime mínimas mais baixas, mas a agressão vendedora fica mais rala a cada queda — os lotes agressores encolhem.", "Cada nova mínima sai com menos negócios agressores que a anterior — o preço segue caindo enquanto a participação vendedora míngua.", "O preço renova o fundo, porém o tape mostra agressão vendedora cada vez menor a cada perna — os prints grandes sumiram.", "Fundo atrás de fundo no gráfico, mas cada mergulho sai com menos lotes vendedores — a queda anda por inércia, não por agressão.", "O delta vendedor encolhe a cada perna de baixa: o preço ainda cede, mas quem empurrava já não aparece no tape.", "Nova mínima no print, agressão pela metade: os vendedores grandes sumiram e sobrou varejo esticando o movimento.", "A cada renovação do fundo o tape responde mais fraco — menos negócios, lotes menores, pressão evaporando.", "O preço fura o suporte, mas o volume agressor de venda é uma fração do que era duas pernas atrás.", "Queda com combustível acabando: mínimas marginais, delta vendedor cada vez mais raso a cada tentativa."],
         expSell: "Novas máximas com delta encolhendo e virando negativo: o avanço anda sem combustível — provável recompra de vendidos, não compra nova. Sem agressão real sustentando, a força dominante passa a ser vendedora.",
         expBuy: "Novas mínimas com delta encolhendo e virando positivo: a queda perdeu combustível — não há vendedor novo agredindo. A força dominante passa a ser compradora.",
         watch: "Divergência é aviso, não gatilho: espere a falha do extremo antes de agir.",
@@ -120,8 +132,8 @@ const L = {
       },
       iniciativa: {
         name: "Iniciativa (rompimento)",
-        tapeBuy: ["No rompimento, o tape acelera: lotes grandes agredindo o ask em sequência e o book de venda consumido nível após nível, sem recarga.", "O nível é rompido com prints grandes e rápidos no ask; a liquidez de venda some da tela sem ser reposta.", "Na quebra do range, a velocidade do tape dispara: agressão compradora em rajada, book de venda evaporando nível a nível."],
-        tapeSell: ["No rompimento, o tape acelera: lotes grandes agredindo o bid em sequência e o book de compra consumido nível após nível, sem recarga.", "O nível é rompido com prints grandes e rápidos no bid; a liquidez de compra some da tela sem ser reposta.", "Na quebra do range, a velocidade do tape dispara: agressão vendedora em rajada, book de compra evaporando nível a nível."],
+        tapeBuy: ["No rompimento, o tape acelera: lotes grandes agredindo o ask em sequência e o book de venda consumido nível após nível, sem recarga.", "O nível é rompido com prints grandes e rápidos no ask; a liquidez de venda some da tela sem ser reposta.", "Na quebra do range, a velocidade do tape dispara: agressão compradora em rajada, book de venda evaporando nível a nível.", "O range morre num estalo: sequência de lotes cheios no ask, e cada nível de venda que aparece é engolido na hora.", "Rompimento com assinatura institucional — prints grandes, ritmo acelerando e o book do lado vendedor recuando sem repor.", "A compra chega em rajadas curtas e pesadas; o ask não segura dois segundos no mesmo preço.", "Depois do rompimento, o tape não deixa o preço voltar: toda oferta nova de venda é consumida antes de formar fila.", "Velocidade e tamanho juntos: o tape dispara para cima com lotes acima da média e zero recarga do vendedor.", "O nível cede e o mercado troca de dono — agressão compradora contínua, sem pausa para o vendedor respirar."],
+        tapeSell: ["No rompimento, o tape acelera: lotes grandes agredindo o bid em sequência e o book de compra consumido nível após nível, sem recarga.", "O nível é rompido com prints grandes e rápidos no bid; a liquidez de compra some da tela sem ser reposta.", "Na quebra do range, a velocidade do tape dispara: agressão vendedora em rajada, book de compra evaporando nível a nível.", "O range morre num estalo: sequência de lotes cheios no bid, e cada nível de compra que aparece é engolido na hora.", "Rompimento com assinatura institucional — prints grandes, ritmo acelerando e o book do lado comprador recuando sem repor.", "A venda chega em rajadas curtas e pesadas; o bid não segura dois segundos no mesmo preço.", "Depois do rompimento, o tape não deixa o preço voltar: toda oferta nova de compra é consumida antes de formar fila.", "Velocidade e tamanho juntos: o tape despenca com lotes acima da média e zero recarga do comprador.", "O nível cede e o mercado troca de dono — agressão vendedora contínua, sem pausa para o comprador respirar."],
         expBuy: "Rompimento com volume alto, delta fortemente positivo e fechamento na máxima: agressão real consumindo liquidez — esforço COM resultado. Iniciativa tende à continuação: força stops e atrai momentum.",
         expSell: "Rompimento com volume alto, delta fortemente negativo e fechamento na mínima: agressão real consumindo o book de compra. Esforço com resultado — continuação vendedora.",
         watch: "O teste do nível rompido com delta ainda a favor confirma; delta fraco ou pavio de retorno denuncia armadilha.",
@@ -130,8 +142,8 @@ const L = {
       },
       exaustao: {
         name: "Exaustão climática",
-        tapeSell: ["Explosão de negócios — o maior volume da sessão — com compradores agredindo em pânico, mas o preço estica, devolve quase tudo e fecha perto da abertura.", "Pico histórico de negócios na sessão: compra agressiva em cascata, mas o candle devolve o avanço e fecha onde começou.", "O tape ferve no topo — todo mundo comprando ao mesmo tempo — e ainda assim o preço não sustenta a esticada, voltando à abertura."],
-        tapeBuy: ["Explosão de negócios — o maior volume da sessão — com vendedores agredindo em pânico, mas o preço estica para baixo, devolve quase tudo e fecha perto da abertura.", "Pico histórico de negócios na sessão: venda agressiva em cascata, mas o candle devolve a queda e fecha onde começou.", "O tape ferve no fundo — todo mundo vendendo ao mesmo tempo — e ainda assim o preço não sustenta a esticada, voltando à abertura."],
+        tapeSell: ["Explosão de negócios — o maior volume da sessão — com compradores agredindo em pânico, mas o preço estica, devolve quase tudo e fecha perto da abertura.", "Pico histórico de negócios na sessão: compra agressiva em cascata, mas o candle devolve o avanço e fecha onde começou.", "O tape ferve no topo — todo mundo comprando ao mesmo tempo — e ainda assim o preço não sustenta a esticada, voltando à abertura.", "Clímax clássico: o tape imprime a maior rajada compradora do dia e o candle fecha longe da máxima, devolvendo quase tudo.", "Compra em avalanche no topo — e o pavio superior gigante conta o resto: a esticada foi vendida inteira.", "Toda a euforia compradora do dia coube num candle que mal saiu do lugar: esforço recorde, resultado nenhum.", "O volume explode no topo, o preço estica… e volta na mesma vela — o último comprador acabou de entrar.", "Rajada final: negócios em pico histórico, máxima marginal rejeitada e fechamento de volta ao ponto de partida.", "O tape grita compra mas o candle sussurra venda: range esticado devolvido e fechamento no terço inferior."],
+        tapeBuy: ["Explosão de negócios — o maior volume da sessão — com vendedores agredindo em pânico, mas o preço estica para baixo, devolve quase tudo e fecha perto da abertura.", "Pico histórico de negócios na sessão: venda agressiva em cascata, mas o candle devolve a queda e fecha onde começou.", "O tape ferve no fundo — todo mundo vendendo ao mesmo tempo — e ainda assim o preço não sustenta a esticada, voltando à abertura.", "Capitulação clássica: o tape imprime a maior rajada vendedora do dia e o candle fecha longe da mínima, devolvendo quase tudo.", "Venda em avalanche no fundo — e o pavio inferior gigante conta o resto: o mergulho foi comprado inteiro.", "Todo o pânico vendedor do dia coube num candle que mal saiu do lugar: esforço recorde, resultado nenhum.", "O volume explode no fundo, o preço estica… e volta na mesma vela — o último vendedor acabou de sair.", "Rajada final: negócios em pico histórico, mínima marginal rejeitada e fechamento de volta ao ponto de partida.", "O tape grita venda mas o candle sussurra compra: range esticado devolvido e fechamento no terço superior."],
         expSell: "Volume recorde com delta positivo, porém pavio superior enorme e fechamento na abertura: o esforço máximo produziu nada. É o último comprador entrando na distribuição. Esgotado o fluxo, a força vira vendedora.",
         expBuy: "Volume recorde com delta negativo, porém pavio inferior enorme e fechamento na abertura: pânico de venda inteiramente absorvido — capitulação. O último vendedor saiu; a força vira compradora.",
         watch: "O clímax raramente é a virada exata: procure o teste secundário do extremo com volume bem menor (Wyckoff).",
@@ -140,8 +152,8 @@ const L = {
       },
       pullback: {
         name: "Pullback em tendência",
-        tapeBuy: ["No recuo, o tape esvazia: negócios pequenos e espaçados, nenhum lote relevante agredindo o bid; o book abaixo segue intacto.", "O recuo acontece em conta-gotas: prints miúdos, nenhum lote institucional vendendo; a estrutura compradora abaixo permanece.", "Durante a correção o tape quase para — volume mínimo, agressão irrelevante — enquanto a liquidez de compra segue posicionada."],
-        tapeSell: ["No repique, o tape esvazia: negócios pequenos e espaçados, nenhum lote relevante agredindo o ask; o book acima segue intacto.", "O repique acontece em conta-gotas: prints miúdos, nenhum lote institucional comprando; a estrutura vendedora acima permanece.", "Durante a correção o tape quase para — volume mínimo, agressão irrelevante — enquanto a liquidez de venda segue posicionada."],
+        tapeBuy: ["No recuo, o tape esvazia: negócios pequenos e espaçados, nenhum lote relevante agredindo o bid; o book abaixo segue intacto.", "O recuo acontece em conta-gotas: prints miúdos, nenhum lote institucional vendendo; a estrutura compradora abaixo permanece.", "Durante a correção o tape quase para — volume mínimo, agressão irrelevante — enquanto a liquidez de compra segue posicionada.", "A correção desce de lado, sem pressa e sem lote: ninguém grande vendendo, só realização pingada.", "O recuo tem cara de intervalo: tape lento, prints pequenos, e a demanda estruturada continua montada logo abaixo.", "Três candles de queda e nenhum sinal de institucional no tape — volume seco, delta irrelevante.", "O preço respira, o tape cochila: o recuo acontece no vácuo, sem agressão vendedora digna de nota.", "Correção magra depois de perna gorda: os lotes que subiram o mercado não aparecem do lado da venda.", "O movimento contrário vem sem convicção — negócios esparsos, tamanho miúdo, book comprador intacto."],
+        tapeSell: ["No repique, o tape esvazia: negócios pequenos e espaçados, nenhum lote relevante agredindo o ask; o book acima segue intacto.", "O repique acontece em conta-gotas: prints miúdos, nenhum lote institucional comprando; a estrutura vendedora acima permanece.", "Durante a correção o tape quase para — volume mínimo, agressão irrelevante — enquanto a liquidez de venda segue posicionada.", "O repique sobe de lado, sem pressa e sem lote: ninguém grande comprando, só recompra pingada.", "O repique tem cara de intervalo: tape lento, prints pequenos, e a oferta estruturada continua montada logo acima.", "Três candles de alta e nenhum sinal de institucional no tape — volume seco, delta irrelevante.", "O preço respira, o tape cochila: o repique acontece no vácuo, sem agressão compradora digna de nota.", "Repique magro depois de perna gorda: os lotes que desceram o mercado não aparecem do lado da compra.", "O movimento contrário vem sem convicção — negócios esparsos, tamanho miúdo, book vendedor intacto."],
         expBuy: "A tendência veio com volume e delta consistentes; o recuo tem volume seco e delta fraco — realização de lucro, não venda institucional. Sem agressão contrária real, a força dominante segue compradora.",
         expSell: "A queda veio com volume e delta consistentes; o repique tem volume seco e delta fraco — recompra de vendidos, não compra nova. A força dominante segue vendedora.",
         watch: "Pullback que ganha volume e delta contrário crescente deixou de ser pullback.",
@@ -150,7 +162,7 @@ const L = {
       },
       mistos: {
         name: "Sinais conflitantes",
-        tape: ["O tape alterna: agressão forte num candle, ausência no seguinte; delta e preço contam histórias diferentes em pernas consecutivas.", "Um candle traz agressão pesada, o seguinte vem vazio; o delta aponta para um lado e o fechamento vai para o outro — nada se confirma.", "O tape não constrói narrativa: prints grandes isolados, sem sequência, com preço e delta se contradizendo a cada perna."],
+        tape: ["O tape alterna: agressão forte num candle, ausência no seguinte; delta e preço contam histórias diferentes em pernas consecutivas.", "Um candle traz agressão pesada, o seguinte vem vazio; o delta aponta para um lado e o fechamento vai para o outro — nada se confirma.", "O tape não constrói narrativa: prints grandes isolados, sem sequência, com preço e delta se contradizendo a cada perna.", "O tape muda de opinião a cada candle: agressão compradora agora, vendedora em seguida, e o preço não valida nenhuma.", "Volume alto aqui, silêncio ali; delta positivo num print, negativo no outro — o leilão está sem dono.", "Nada fecha: o candle sobe com delta vendedor, o seguinte cai com delta comprador, e nenhum nível é defendido duas vezes.", "Sinais em curto-circuito — cada evidência aponta para um lado e a próxima desmente a anterior.", "O mercado imprime ruído com volume: movimentos que começam fortes e morrem no candle seguinte.", "Leitura embaçada de propósito: agressões isoladas, sem sequência, sem defesa, sem narrativa."],
         exp: "Volume alto com delta quase nulo, candles contradizendo o delta anterior, nenhum nível defendido com consistência: não há força dominante legível. A leitura profissional aqui é uma só — ficar de fora e esperar o mercado se definir.",
         watch: "Não operar também é leitura. A maioria das perdas nasce de forçar interpretação onde não existe sinal.",
         study: "O mercado passa boa parte do tempo ilegível. Reconhecer ausência de sinal protege capital — é a habilidade que separa disciplina de compulsão.",
@@ -415,7 +427,7 @@ function baseDeltas(candles, intensity = 0.55) {
 // ─────────────── geradores (universalizados, ~1000 unidades) ───────────────
 function genAbsorcao(forceDir) {
   const dir = forceDir || pick([1, -1]); // -1: fundo → resposta buy
-  const n = rndi(11, 16);
+  const n = rndi(10, 18);
   const candles = buildCandles(trendCloses(n, 1000, rnd(1.4, 2.2), rnd(0.5, 0.9), dir));
   baseDeltas(candles);
   const last = candles[n - 1];
@@ -441,7 +453,7 @@ function genAbsorcao(forceDir) {
 
 function genDivergencia(forceDir) {
   const dir = forceDir || pick([1, -1]); // 1: topos → resposta sell
-  const n = rndi(11, 15);
+  const n = rndi(10, 17);
   const candles = buildCandles(trendCloses(n, 998, rnd(1.2, 2.0), rnd(0.4, 0.7), dir));
   baseDeltas(candles, 0.55);
   const a = candles[n - 3], b = candles[n - 2], k = candles[n - 1];
@@ -462,7 +474,7 @@ function genDivergencia(forceDir) {
 
 function genIniciativa(forceDir) {
   const dir = forceDir || pick([1, -1]); // 1 → buy
-  const n = rndi(8, 13);
+  const n = rndi(7, 14);
   const closes = [];
   for (let i = 0; i < n; i++) closes.push(1000 + rnd(-1, 1));
   const candles = buildCandles(closes, 1);
@@ -487,7 +499,7 @@ function genIniciativa(forceDir) {
 
 function genExaustao(forceDir) {
   const dir = forceDir || pick([1, -1]); // 1: alta esticada → sell
-  const n = rndi(10, 14);
+  const n = rndi(9, 16);
   const candles = buildCandles(trendCloses(n, 998, rnd(1.7, 2.5), rnd(0.35, 0.6), dir));
   baseDeltas(candles, 0.5);
   candles[n - 2].vol = rndi(80, 100);
@@ -507,7 +519,7 @@ function genExaustao(forceDir) {
 
 function genPullback(forceDir) {
   const dir = forceDir || pick([1, -1]); // 1 → buy
-  const m = rndi(7, 10);
+  const m = rndi(6, 11);
   const candles = buildCandles(trendCloses(m, 998, rnd(1.5, 2.3), rnd(0.4, 0.7), dir));
   baseDeltas(candles, 0.55);
   let last = candles[m - 1].c;
@@ -527,7 +539,7 @@ function genPullback(forceDir) {
 }
 
 function genMistos() {
-  const n = rndi(11, 15);
+  const n = rndi(10, 17);
   const closes = [];
   for (let i = 0; i < n; i++) closes.push(1000 + rnd(-1.6, 1.6));
   const candles = buildCandles(closes, 1.2);
@@ -741,7 +753,7 @@ export default function App() {
     const cat = pickCategory(d.byCat, recentCats);
     setRecentCats((r) => [cat, ...r].slice(0, 2));
     const sc = GEN[cat]();
-    sc.v = Math.floor(Math.random() * 97); // índice estável da variação de tape
+    sc.v = pickVariation(cat); // variação de tape sem repetição imediata no tema
     if (!unlimitedPts(d)) {
       const nd = { ...d, points: d.points - SCENARIO_COST };
       setData(nd); persist(nd);
