@@ -24,11 +24,23 @@ const REGEN_CAP = 100;      // teto do acúmulo por regeneração
 const DAILY_BONUS = 20;     // bônus de login diário (todos os planos)
 
 // ► PREÇOS — preencha aqui quando definir os valores (aparecem nos 3 cartões):
-const PLAN_PRICES = {
-  base: { pt: "R$ 47/mês", en: "US$ 19/mo", es: "US$ 19/mes" },
-  plus: { pt: "R$ 87/mês", en: "US$ 39/mo", es: "US$ 39/mes" },
-  master: { pt: "R$ 197/mês", en: "US$ 89/mo", es: "US$ 89/mes" },
+// Vitrine de preços por GEOGRAFIA (IP na borda da Vercel), não por idioma:
+// quem fala português mas mora nos EUA/Europa vê o preço internacional.
+// A cobrança final (Fase 2) segue o país do cartão — camada à prova de VPN.
+const PLAN_AMOUNT = {
+  br: { base: "R$ 47", plus: "R$ 87", master: "R$ 197" },
+  intl: { base: "US$ 19", plus: "US$ 39", master: "US$ 89" },
 };
+const PLAN_SUFFIX = { pt: "/mês", en: "/mo", es: "/mes" };
+function planPrice(pid, lang, geo) {
+  return (geo === "BR" ? PLAN_AMOUNT.br : PLAN_AMOUNT.intl)[pid] + (PLAN_SUFFIX[lang] || "/mo");
+}
+function geoCountry() {
+  try {
+    const m = document.cookie.match(/(?:^|; )td-country=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  } catch (e) { return ""; }
+}
 
 const C = {
   bg: "#12143A", surface: "#1B1E52", card: "#232670", navy: "#2D3278",
@@ -767,6 +779,7 @@ export default function App() {
   const [adCfg, setAdCfg] = useState(null);
   const [adOpen, setAdOpen] = useState(false);
   const [adReward, setAdReward] = useState(0);
+  const [geo, setGeo] = useState("");
 
   const dict = L[lang];
   const U = dict.ui;
@@ -781,6 +794,7 @@ export default function App() {
     })();
   }, []);
   useEffect(() => { sGet("td:ad:config").then((c) => setAdCfg(c)); }, []);
+  useEffect(() => { setGeo(geoCountry()); }, []);
 
   function changeLang(v) { setLang(v); sSet("td:lang", v); }
 
@@ -1128,7 +1142,7 @@ export default function App() {
                         </span>
                       )}
                       <p style={{ fontWeight: 800, fontSize: 21, marginBottom: 4 }}>{p.name}</p>
-                      <p style={{ color: C.orange, fontWeight: 800, fontSize: 23, marginBottom: 8 }}>{PLAN_PRICES[pid][lang]}</p>
+                      <p style={{ color: C.orange, fontWeight: 800, fontSize: 23, marginBottom: 8 }}>{planPrice(pid, lang, geo)}</p>
                       <p style={{ color: C.muted, fontSize: 17, marginBottom: 14, minHeight: 72 }}>{p.desc}</p>
                       <button onClick={() => activateTier(pid)} disabled={current}
                         style={{ ...btn, width: "100%", minHeight: 54, fontSize: 18, padding: 12, background: current ? C.grid : featured ? C.orange : C.navy, color: featured && !current ? "#231000" : "#fff" }}>

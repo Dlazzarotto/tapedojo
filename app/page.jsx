@@ -18,10 +18,20 @@ const HL = {
       { t: "As fases", d: "Acertos sobem sua faixa: Branca → Amarela → Laranja → Verde → Azul → Marrom → Preta. Com 70%+ em todos os fundamentos você se gradua — e o caminho segue na Arena LIVE, em três níveis (Intermediário Avançado → Avançado → Eficiente), com mais ruído e janelas de decisão cada vez menores." },
     ],
     cards: [
-      { id: "treinar", tag: "DOJO", title: "Treinador de Fluxo", desc: "Drills dos 6 fundamentos com explicação, pontos, faixas, relatório e estudo dirigido. PT · EN · ES." },
-      { id: "live", tag: "MASTER", title: "Arena LIVE", desc: "Mercado sintético em tempo real: leia o regime se formando e decida na janela. Três níveis." },
-      { id: "wilder", tag: "SÉRIE MESTRES · VOL. 1", title: "Dojo Wilder", desc: "RSI, ATR, ADX e Parabolic SAR de verdade — Modo Estudo ou Modo Pregão, com exame e certificado." },
+      { id: "treinar", tag: "DOJO", title: "Treinador de Fluxo", plan: "Todos os planos", desc: "Drills dos 6 fundamentos com explicação, pontos, faixas, relatório e estudo dirigido. PT · EN · ES." },
+      { id: "live", tag: "MASTER", title: "Arena LIVE", plan: "Plano Master", desc: "Mercado sintético em tempo real: leia o regime se formando e decida na janela. Três níveis." },
+      { id: "wilder", tag: "SÉRIE MESTRES · VOL. 1", title: "Dojo Wilder", plan: "Incluso no Master · ou avulso", desc: "RSI, ATR, ADX e Parabolic SAR de verdade — Modo Estudo ou Modo Pregão, com exame e certificado." },
     ],
+    trial: "🎁 Teste grátis: 7 dias com acesso total a tudo, sem cartão. Depois, cada área pertence ao seu plano.",
+    plansTitle: "Planos",
+    plans: [
+      { name: "Base", pid: "base", desc: "1.000 pontos/mês · Treinador completo, relatório de erros e estudo dirigido." },
+      { name: "Plus", pid: "plus", badge: "Mais popular", desc: "3.000 pontos/mês · para quem treina todos os dias." },
+      { name: "Master", pid: "master", desc: "10.000 pontos + regeneração · Arena LIVE (níveis 4–6) · cursos Wyckoff, Steidlmayer e Granville · 1 Sessão Sensei/mês." },
+    ],
+    cta: "🥋 Começar os 7 dias grátis",
+    plansNoteBR: "Preços para o Brasil — no exterior: US$ 19 / 39 / 89. O pagamento destrava a porta; o exame destrava a sala: nível não se compra.",
+    plansNoteIntl: "Preços internacionais — no Brasil: R$ 47 / 87 / 197. O pagamento destrava a porta; o exame destrava a sala: nível não se compra.",
     note: "Plataforma educacional com cenários sintéticos — não são dados reais de mercado nem recomendação de investimento.",
   },
   en: {
@@ -35,10 +45,20 @@ const HL = {
       { t: "The stages", d: "Correct reads raise your belt: White → Yellow → Orange → Green → Blue → Brown → Black. With 70%+ on every fundamental you graduate — and the path continues in the LIVE Arena, across three levels (Upper Intermediate → Advanced → Proficient), with more noise and shrinking decision windows." },
     ],
     cards: [
-      { id: "treinar", tag: "DOJO", title: "Flow Trainer", desc: "Drills on the 6 fundamentals with full reasoning, points, belts, report and guided study. PT · EN · ES." },
-      { id: "live", tag: "MASTER", title: "LIVE Arena", desc: "Synthetic market in real time: read the regime as it forms and decide inside the window. Three levels." },
-      { id: "wilder", tag: "MASTERS SERIES · VOL. 1", title: "Wilder Dojo", desc: "Real RSI, ATR, ADX and Parabolic SAR — Study Mode or Session Mode, with exam and certificate. (Prototype in PT)" },
+      { id: "treinar", tag: "DOJO", title: "Flow Trainer", plan: "All plans", desc: "Drills on the 6 fundamentals with full reasoning, points, belts, report and guided study. PT · EN · ES." },
+      { id: "live", tag: "MASTER", title: "LIVE Arena", plan: "Master plan", desc: "Synthetic market in real time: read the regime as it forms and decide inside the window. Three levels." },
+      { id: "wilder", tag: "MASTERS SERIES · VOL. 1", title: "Wilder Dojo", plan: "Included in Master · or standalone", desc: "Real RSI, ATR, ADX and Parabolic SAR — Study Mode or Session Mode, with exam and certificate. (Prototype in PT)" },
     ],
+    trial: "🎁 Free trial: 7 days with full access to everything, no card. After that, each area belongs to your plan.",
+    plansTitle: "Plans",
+    plans: [
+      { name: "Base", pid: "base", desc: "1,000 points/month · full Trainer, mistake report and guided study." },
+      { name: "Plus", pid: "plus", badge: "Most popular", desc: "3,000 points/month · for those who train every day." },
+      { name: "Master", pid: "master", desc: "10,000 points + regeneration · LIVE Arena (levels 4–6) · Wyckoff, Steidlmayer & Granville courses · 1 Sensei Session/month." },
+    ],
+    cta: "🥋 Start the 7-day free trial",
+    plansNoteBR: "Prices for Brazil — elsewhere: US$ 19 / 39 / 89. Payment unlocks the door; the exam unlocks the room: levels can't be bought.",
+    plansNoteIntl: "International prices — Brazil: R$ 47 / 87 / 197. Payment unlocks the door; the exam unlocks the room: levels can't be bought.",
     note: "Educational platform with synthetic scenarios — not real market data and not investment advice.",
   },
   es: {
@@ -52,16 +72,39 @@ const HL = {
       { t: "Las fases", d: "Los aciertos suben tu cinturón: Blanco → Amarillo → Naranja → Verde → Azul → Marrón → Negro. Con 70%+ en todos los fundamentos te gradúas — y el camino sigue en la Arena LIVE, en tres niveles (Intermedio Avanzado → Avanzado → Eficiente), con más ruido y ventanas de decisión cada vez menores." },
     ],
     cards: [
-      { id: "treinar", tag: "DOJO", title: "Entrenador de Flujo", desc: "Drills de los 6 fundamentos con razonamiento completo, puntos, cinturones, informe y estudio dirigido. PT · EN · ES." },
-      { id: "live", tag: "MASTER", title: "Arena LIVE", desc: "Mercado sintético en tiempo real: lee el régimen mientras se forma y decide dentro de la ventana. Tres niveles." },
-      { id: "wilder", tag: "SERIE MAESTROS · VOL. 1", title: "Dojo Wilder", desc: "RSI, ATR, ADX y Parabolic SAR de verdad — Modo Estudio o Modo Sesión, con examen y certificado. (Prototipo en PT)" },
+      { id: "treinar", tag: "DOJO", title: "Entrenador de Flujo", plan: "Todos los planes", desc: "Drills de los 6 fundamentos con razonamiento completo, puntos, cinturones, informe y estudio dirigido. PT · EN · ES." },
+      { id: "live", tag: "MASTER", title: "Arena LIVE", plan: "Plan Master", desc: "Mercado sintético en tiempo real: lee el régimen mientras se forma y decide dentro de la ventana. Tres niveles." },
+      { id: "wilder", tag: "SERIE MAESTROS · VOL. 1", title: "Dojo Wilder", plan: "Incluido en Master · o suelto", desc: "RSI, ATR, ADX y Parabolic SAR de verdad — Modo Estudio o Modo Sesión, con examen y certificado. (Prototipo en PT)" },
     ],
+    trial: "🎁 Prueba gratis: 7 días con acceso total a todo, sin tarjeta. Después, cada área pertenece a tu plan.",
+    plansTitle: "Planes",
+    plans: [
+      { name: "Base", pid: "base", desc: "1.000 puntos/mes · Entrenador completo, informe de errores y estudio dirigido." },
+      { name: "Plus", pid: "plus", badge: "Más popular", desc: "3.000 puntos/mes · para quien entrena todos los días." },
+      { name: "Master", pid: "master", desc: "10.000 puntos + regeneración · Arena LIVE (niveles 4–6) · cursos Wyckoff, Steidlmayer y Granville · 1 Sesión Sensei/mes." },
+    ],
+    cta: "🥋 Empezar los 7 días gratis",
+    plansNoteBR: "Precios para Brasil — en el exterior: US$ 19 / 39 / 89. El pago abre la puerta; el examen abre la sala: el nivel no se compra.",
+    plansNoteIntl: "Precios internacionales — Brasil: R$ 47 / 87 / 197. El pago abre la puerta; el examen abre la sala: el nivel no se compra.",
     note: "Plataforma educativa con escenarios sintéticos — no son datos reales de mercado ni recomendación de inversión.",
   },
 };
 
 
 const ROUTES = { treinar: "/treinar", live: "/live", wilder: "/mestres/wilder" };
+
+// vitrine de preços por geografia (cookie td-country, gravado pelo middleware na borda)
+const PLAN_AMOUNT = {
+  br: { base: "R$ 47", plus: "R$ 87", master: "R$ 197" },
+  intl: { base: "US$ 19", plus: "US$ 39", master: "US$ 89" },
+};
+const PLAN_SUFFIX = { pt: "/mês", en: "/mo", es: "/mes" };
+function geoCountry() {
+  try {
+    const m = document.cookie.match(/(?:^|; )td-country=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  } catch (e) { return ""; }
+}
 
 function ToriiHome({ size = 116 }) {
   return (
@@ -106,13 +149,17 @@ function HowItWorks({ T }) {
 
 export default function Home() {
   const [lang, setLang] = useState("pt");
+  const [geo, setGeo] = useState("");
   const T = HL[lang];
+  const isBR = geo === "BR";
+  const priceOf = (pid) => (isBR ? PLAN_AMOUNT.br : PLAN_AMOUNT.intl)[pid] + (PLAN_SUFFIX[lang] || "/mo");
 
   useEffect(() => {
     try {
       const v = localStorage.getItem("td:lang");
       if (v) { const k = JSON.parse(v); if (HL[k]) setLang(k); }
     } catch (e) { /* primeira visita */ }
+    setGeo(geoCountry());
   }, []);
 
   function changeLang(v) {
@@ -129,6 +176,7 @@ export default function Home() {
             Tape<span style={{ color: HUB.orange }}>Dojo</span>
           </h1>
           <p style={{ color: HUB.orange, fontSize: 21, fontWeight: 700 }}>{T.slogan}</p>
+          <p style={{ background: "rgba(244,123,32,0.12)", border: "1px solid " + HUB.orange, color: HUB.text, borderRadius: 12, padding: "10px 16px", fontSize: 16.5, fontWeight: 700, marginTop: 12, maxWidth: 560 }}>{T.trial}</p>
 
           <div className="flex justify-center gap-2 mt-4" role="group" aria-label="Idioma / Language">
             {Object.keys(HL).map((k) => (
@@ -147,13 +195,36 @@ export default function Home() {
           {T.cards.map((c) => (
             <Link key={c.id} href={ROUTES[c.id]} style={{ textDecoration: "none" }}>
               <div style={{ background: HUB.surface, border: "1px solid " + HUB.grid, borderRadius: 18, padding: 20, minHeight: 96 }}>
-                <p style={{ color: HUB.orange, fontWeight: 800, fontSize: 14.5, letterSpacing: "0.08em", marginBottom: 4 }}>{c.tag}</p>
+                <div className="flex items-center justify-between" style={{ marginBottom: 4, gap: 8, flexWrap: "wrap" }}>
+                  <p style={{ color: HUB.orange, fontWeight: 800, fontSize: 14.5, letterSpacing: "0.08em" }}>{c.tag}</p>
+                  <p style={{ color: HUB.muted, fontWeight: 700, fontSize: 13.5, border: "1px solid " + HUB.grid, borderRadius: 999, padding: "2px 10px" }}>{c.plan}</p>
+                </div>
                 <p style={{ color: HUB.text, fontWeight: 800, fontSize: 23, marginBottom: 6 }}>{c.title} →</p>
                 <p style={{ color: HUB.muted, fontSize: 17.5 }}>{c.desc}</p>
               </div>
             </Link>
           ))}
         </div>
+
+        <section style={{ marginTop: 30 }}>
+          <h2 style={{ fontSize: 27, fontWeight: 800, textAlign: "center", marginBottom: 16 }}>{T.plansTitle}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ alignItems: "stretch" }}>
+            {T.plans.map((pl) => (
+              <div key={pl.name} style={{ background: HUB.surface, border: "2px solid " + (pl.badge ? HUB.orange : HUB.grid), borderRadius: 18, padding: 18, position: "relative" }}>
+                {pl.badge && (
+                  <span style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: HUB.orange, color: "#231000", fontWeight: 800, fontSize: 13, borderRadius: 999, padding: "3px 12px", whiteSpace: "nowrap" }}>{pl.badge}</span>
+                )}
+                <p style={{ fontWeight: 800, fontSize: 21 }}>{pl.name}</p>
+                <p style={{ color: HUB.orange, fontWeight: 800, fontSize: 24, margin: "2px 0 8px" }}>{priceOf(pl.pid)}</p>
+                <p style={{ color: HUB.muted, fontSize: 15.5 }}>{pl.desc}</p>
+              </div>
+            ))}
+          </div>
+          <Link href="/treinar" style={{ textDecoration: "none" }}>
+            <p style={{ background: HUB.orange, color: "#231000", fontWeight: 800, fontSize: 19, textAlign: "center", borderRadius: 14, padding: "16px 20px", marginTop: 16, cursor: "pointer" }}>{T.cta}</p>
+          </Link>
+          <p style={{ color: HUB.muted, fontSize: 14.5, textAlign: "center", marginTop: 10 }}>{isBR ? T.plansNoteBR : T.plansNoteIntl}</p>
+        </section>
 
         <p style={{ color: HUB.muted, fontSize: 15.5, marginTop: 28, textAlign: "center" }}>{T.note}</p>
       </div>
