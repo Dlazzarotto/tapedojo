@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 const HUB = { bg: "#12143A", surface: "#1B1E52", orange: "#F47B20", text: "#F5F6FF", muted: "#A9AEDB", grid: "#34386F", navy: "#2D3278" };
 
@@ -33,7 +34,9 @@ const HL = {
     plansNote: "O pagamento destrava a porta; o exame destrava a sala: nível não se compra.",
     settings: "Configurações", settingsLang: "Idioma", accountTitle: "Conta",
     accEmail: "E-mail", accPhone: "Telefone", accPass: "Senha",
-    accountSoon: "E-mail, telefone e senha são ativados com as contas na nuvem (em breve). Hoje seu progresso vive neste aparelho.",
+    accountSoon: "Crie seu perfil no dojo para gerenciar e-mail, telefone e senha.",
+    accLoginCta: "Entrar no dojo →", accSave: "Salvar", accSaved: "Atualizado ✔",
+    accNewPass: "Nova senha (mín. 6)", accMailHint: "Trocar o e-mail pode pedir confirmação na caixa de entrada.",
     close: "Fechar",
     note: "Plataforma educacional com cenários sintéticos — não são dados reais de mercado nem recomendação de investimento.",
   },
@@ -63,7 +66,9 @@ const HL = {
     plansNote: "Payment unlocks the door; the exam unlocks the room: levels can't be bought.",
     settings: "Settings", settingsLang: "Language", accountTitle: "Account",
     accEmail: "Email", accPhone: "Phone", accPass: "Password",
-    accountSoon: "Email, phone and password activate with cloud accounts (coming soon). Today your progress lives on this device.",
+    accountSoon: "Create your dojo profile to manage email, phone and password.",
+    accLoginCta: "Enter the dojo →", accSave: "Save", accSaved: "Updated ✔",
+    accNewPass: "New password (min. 6)", accMailHint: "Changing email may ask for inbox confirmation.",
     close: "Close",
     note: "Educational platform with synthetic scenarios — not real market data and not investment advice.",
   },
@@ -93,7 +98,9 @@ const HL = {
     plansNote: "El pago abre la puerta; el examen abre la sala: el nivel no se compra.",
     settings: "Configuración", settingsLang: "Idioma", accountTitle: "Cuenta",
     accEmail: "Correo", accPhone: "Teléfono", accPass: "Contraseña",
-    accountSoon: "Correo, teléfono y contraseña se activan con las cuentas en la nube (muy pronto). Hoy tu progreso vive en este dispositivo.",
+    accountSoon: "Crea tu perfil en el dojo para gestionar correo, teléfono y contraseña.",
+    accLoginCta: "Entrar al dojo →", accSave: "Guardar", accSaved: "Actualizado ✔",
+    accNewPass: "Nueva contraseña (mín. 6)", accMailHint: "Cambiar el correo puede pedir confirmación en tu bandeja.",
     close: "Cerrar",
     note: "Plataforma educativa con escenarios sintéticos — no son datos reales de mercado ni recomendación de inversión.",
   },
@@ -159,6 +166,34 @@ function HowItWorks({ T }) {
 export default function Home() {
   const [lang, setLang] = useState("en");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [acc, setAcc] = useState({ sess: null, email: "", pass: "", phone: "", done: null });
+
+  async function openSettings() {
+    setSettingsOpen(true);
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        let phone = "";
+        try {
+          const r = await supabase.from("td_profiles").select("phone").eq("user_id", data.session.user.id).maybeSingle();
+          phone = (r.data && r.data.phone) || "";
+        } catch (e) { /* ok */ }
+        setAcc({ sess: data.session, email: data.session.user.email || "", pass: "", phone, done: null });
+      } else {
+        setAcc({ sess: null, email: "", pass: "", phone: "", done: null });
+      }
+    } catch (e) { setAcc({ sess: null, email: "", pass: "", phone: "", done: null }); }
+  }
+
+  async function saveAcc() {
+    const s = acc.sess; if (!s) return;
+    try {
+      if (acc.email && acc.email !== s.user.email) await supabase.auth.updateUser({ email: acc.email.trim() });
+      if (acc.pass && acc.pass.length >= 6) await supabase.auth.updateUser({ password: acc.pass });
+      await supabase.from("td_profiles").update({ phone: acc.phone || null }).eq("user_id", s.user.id);
+      setAcc((a) => ({ ...a, pass: "", done: true }));
+    } catch (e) { setAcc((a) => ({ ...a, done: false })); }
+  }
   const [geo, setGeo] = useState("");
   const T = HL[lang];
   const isBR = geo === "BR";
@@ -187,7 +222,7 @@ export default function Home() {
               <option key={k} value={k}>{LANG_NAMES[k]}</option>
             ))}
           </select>
-          <button onClick={() => setSettingsOpen(true)} aria-label={T.settings} title={T.settings}
+          <button onClick={openSettings} aria-label={T.settings} title={T.settings}
             style={{ background: HUB.navy, color: "#fff", border: "1px solid " + HUB.grid, borderRadius: 10, fontSize: 20, minHeight: 44, minWidth: 46, cursor: "pointer" }}>
             ⚙
           </button>
@@ -255,13 +290,29 @@ export default function Home() {
               ))}
             </select>
             <p style={{ color: HUB.muted, fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>{T.accountTitle}</p>
-            {[T.accEmail, T.accPhone, T.accPass].map((f) => (
-              <div key={f} style={{ marginBottom: 8 }}>
-                <input disabled placeholder={"🔒 " + f}
-                  style={{ width: "100%", background: HUB.bg, color: HUB.muted, border: "1px dashed " + HUB.grid, borderRadius: 10, fontSize: 15.5, padding: "11px 12px" }} />
+            {acc.sess ? (
+              <div>
+                <input value={acc.email} onChange={(e) => setAcc((a) => ({ ...a, email: e.target.value }))} placeholder={T.accEmail}
+                  style={{ width: "100%", background: HUB.bg, color: HUB.text, border: "1px solid " + HUB.grid, borderRadius: 10, fontSize: 15.5, padding: "11px 12px", marginBottom: 8 }} />
+                <input value={acc.phone} onChange={(e) => setAcc((a) => ({ ...a, phone: e.target.value }))} placeholder={T.accPhone}
+                  style={{ width: "100%", background: HUB.bg, color: HUB.text, border: "1px solid " + HUB.grid, borderRadius: 10, fontSize: 15.5, padding: "11px 12px", marginBottom: 8 }} />
+                <input type="password" value={acc.pass} onChange={(e) => setAcc((a) => ({ ...a, pass: e.target.value }))} placeholder={T.accNewPass}
+                  style={{ width: "100%", background: HUB.bg, color: HUB.text, border: "1px solid " + HUB.grid, borderRadius: 10, fontSize: 15.5, padding: "11px 12px", marginBottom: 8 }} />
+                <button onClick={saveAcc}
+                  style={{ width: "100%", background: HUB.buy || "#22C55E", color: "#06220F", fontWeight: 800, fontSize: 16, border: "none", borderRadius: 10, padding: 12, cursor: "pointer", marginBottom: 6 }}>
+                  {T.accSave}
+                </button>
+                {acc.done === true && <p style={{ color: "#22C55E", fontWeight: 800, fontSize: 15, marginBottom: 6 }}>{T.accSaved}</p>}
+                <p style={{ color: HUB.muted, fontSize: 13.5, marginBottom: 12 }}>{T.accMailHint}</p>
               </div>
-            ))}
-            <p style={{ color: HUB.muted, fontSize: 14.5, marginBottom: 14 }}>{T.accountSoon}</p>
+            ) : (
+              <div>
+                <p style={{ color: HUB.muted, fontSize: 14.5, marginBottom: 10 }}>{T.accountSoon}</p>
+                <Link href="/treinar" style={{ textDecoration: "none" }}>
+                  <p style={{ background: HUB.navy, color: "#fff", fontWeight: 800, fontSize: 16, textAlign: "center", borderRadius: 10, padding: 12, marginBottom: 12 }}>{T.accLoginCta}</p>
+                </Link>
+              </div>
+            )}
             <button onClick={() => setSettingsOpen(false)}
               style={{ width: "100%", background: HUB.orange, color: "#231000", fontWeight: 800, fontSize: 17, border: "none", borderRadius: 12, padding: 14, cursor: "pointer", minHeight: 50 }}>
               {T.close}

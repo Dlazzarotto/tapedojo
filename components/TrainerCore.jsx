@@ -678,6 +678,7 @@ async function sGet(key) {
 }
 function sSet(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* memória */ }
+  try { if (typeof window !== "undefined" && window.__tdCloudPush) window.__tdCloudPush(key, val); } catch (e) { /* nuvem: melhor esforço */ }
 }
 
 // ─────────────── gráfico ───────────────
@@ -791,6 +792,8 @@ export default function App() {
       if (savedLang && L[savedLang]) setLang(savedLang);
       const list = await sGet("td:users");
       if (Array.isArray(list)) setUsers(list);
+      const cn = await sGet("td:cloudName"); // conta na nuvem → entra direto
+      if (cn) enter(cn);
     })();
   }, []);
   useEffect(() => { sGet("td:ad:config").then((c) => setAdCfg(c)); }, []);

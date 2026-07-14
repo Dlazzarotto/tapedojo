@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import AuthGate from "@/components/AuthGate";
 import App from "@/components/LiveArena";
 
 export default function Page() {
@@ -8,7 +9,9 @@ export default function Page() {
       <div className="max-w-3xl mx-auto px-4 pt-3">
         <Link href="/" style={{ color: "#F47B20", fontWeight: 800, fontSize: 17, textDecoration: "none" }}>← Início</Link>
       </div>
-      <App />
+      <AuthGate>
+        <App />
+      </AuthGate>
     </div>
   );
 }
