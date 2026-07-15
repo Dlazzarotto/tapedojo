@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { aggregateStats } from "@/lib/adminStats";
+import { aggregateStats, missingProfiles } from "@/lib/adminStats";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +17,25 @@ export async function GET(req) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
   const db = createClient(url, service, { auth: { persistSession: false } });
-  const [profiles, states, purchases, cancellations] = await Promise.all([
+  const [profiles, states, purchases, cancellations, authRes] = await Promise.all([
     db.from("td_profiles").select("user_id, display_name, tier, subscription_status, country, created_at").limit(5000),
     db.from("td_state").select("updated_at").limit(5000),
     db.from("td_purchases").select("amount_cents, currency, sku, created_at").limit(5000),
     db.from("td_cancellations").select("id").limit(5000),
+    db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
   ]);
+  // auto-cura: todo login no cofre ganha perfil (cadastros de janelas quebradas incluídos)
+  let allProfiles = profiles.data || [];
+  try {
+    const authUsers = (authRes && authRes.data && authRes.data.users) || [];
+    const missing = missingProfiles(authUsers, allProfiles);
+    if (missing.length) {
+      const ins = await db.from("td_profiles").insert(missing).select("user_id, display_name, tier, subscription_status, country, created_at");
+      if (ins.data) allProfiles = allProfiles.concat(ins.data);
+    }
+  } catch (e) { /* melhor esforço */ }
   const stats = aggregateStats({
-    profiles: profiles.data || [],
+    profiles: allProfiles,
     states: states.data || [],
     purchases: purchases.data || [],
     cancellations: cancellations.data || [],
