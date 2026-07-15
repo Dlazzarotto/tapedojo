@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { aggregateStats, missingProfiles, jwtRole, jwtRef } from "@/lib/adminStats";
+import { aggregateStats, missingProfiles, jwtRole, jwtRef, authToProfiles } from "@/lib/adminStats";
 
 export const dynamic = "force-dynamic";
 
@@ -64,8 +64,12 @@ export async function GET(req) {
       if (ins.error) warns.push("auto-cura: " + ins.error.message);
     }
   } catch (e) { /* melhor esforço */ }
+  // diag-4: o cofre (comprovadamente funcional) é a base dos inscritos;
+  // a tabela de perfis apenas enriquece com nível/país quando disponível.
+  const authUsersAll = (authRes && authRes.data && authRes.data.users) || [];
+  const merged = authUsersAll.length ? authToProfiles(authUsersAll, allProfiles) : allProfiles;
   const stats = aggregateStats({
-    profiles: allProfiles,
+    profiles: merged,
     states: states.data || [],
     purchases: purchases.data || [],
     cancellations: cancellations.data || [],
@@ -73,7 +77,7 @@ export async function GET(req) {
   });
   return Response.json({
     ...stats, warns,
-    version: "diag-3",
+    version: "diag-4",
     target: url.replace("https://", "").split(".")[0],
     cofre: authUsersCount,
     perfisRaw: (profiles.data || []).length,
