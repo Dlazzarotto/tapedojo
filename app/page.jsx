@@ -39,6 +39,7 @@ const HL = {
     accLoginCta: "Entrar no dojo →", accSave: "Salvar", accSaved: "Atualizado ✔",
     accNewPass: "Nova senha (mín. 6)", accMailHint: "Trocar o e-mail pode pedir confirmação na caixa de entrada.",
     close: "Fechar",
+    glossLink: "📖 Glossário do mercado — os termos em linguagem de gente",
     note: "Plataforma educacional com cenários sintéticos — não são dados reais de mercado nem recomendação de investimento.",
   },
   en: {
@@ -71,6 +72,7 @@ const HL = {
     accLoginCta: "Enter the dojo →", accSave: "Save", accSaved: "Updated ✔",
     accNewPass: "New password (min. 6)", accMailHint: "Changing email may ask for inbox confirmation.",
     close: "Close",
+    glossLink: "📖 Market glossary — the terms in plain language",
     note: "Educational platform with synthetic scenarios — not real market data and not investment advice.",
   },
   es: {
@@ -103,6 +105,7 @@ const HL = {
     accLoginCta: "Entrar al dojo →", accSave: "Guardar", accSaved: "Actualizado ✔",
     accNewPass: "Nueva contraseña (mín. 6)", accMailHint: "Cambiar el correo puede pedir confirmación en tu bandeja.",
     close: "Cerrar",
+    glossLink: "📖 Glosario del mercado — los términos en lenguaje de gente",
     note: "Plataforma educativa con escenarios sintéticos — no son datos reales de mercado ni recomendación de inversión.",
   },
 };
@@ -274,7 +277,10 @@ export default function Home() {
           <p style={{ color: HUB.muted, fontSize: 14.5, textAlign: "center", marginTop: 10 }}>{T.plansNote}</p>
         </section>
 
-        <p style={{ color: HUB.muted, fontSize: 15.5, marginTop: 28, textAlign: "center" }}>{T.note}</p>
+        <Link href="/glossario" style={{ textDecoration: "none" }}>
+          <p style={{ color: HUB.orange, fontWeight: 800, fontSize: 16, textAlign: "center", marginTop: 24 }}>{T.glossLink}</p>
+        </Link>
+        <p style={{ color: HUB.muted, fontSize: 15.5, marginTop: 12, textAlign: "center" }}>{T.note}</p>
       </div>
 
       {settingsOpen && (

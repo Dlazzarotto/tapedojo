@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_PRICES, fetchPrices } from "@/lib/prices";
 import { applyGrant } from "@/lib/grants";
+import { GlossaryModal } from "@/components/GlossaryBody";
 
 // ═══════════════════════════════════════════════════════════════
 // TAPEDOJO — v2
@@ -781,6 +782,7 @@ export default function App() {
   const [pointsDelta, setPointsDelta] = useState(0);
   const [planReason, setPlanReason] = useState("trial"); // 'trial' | 'points'
   const [bonusFlash, setBonusFlash] = useState(false);
+  const [glossOpen, setGlossOpen] = useState(false);
   const [adCfg, setAdCfg] = useState(null);
   const [adOpen, setAdOpen] = useState(false);
   const [adReward, setAdReward] = useState(0);
@@ -1021,6 +1023,10 @@ export default function App() {
               {Object.keys(L).map((k) => <option key={k} value={k}>{L[k].langName}</option>)}
             </select>
             {navBtn("train", U.train)}{navBtn("report", U.report)}{navBtn("study", U.study)}
+            <button onClick={() => setGlossOpen(true)} title="Glossário / Glossary / Glosario" aria-label="Glossário"
+              style={{ minHeight: 46, minWidth: 48, fontSize: 19, fontWeight: 800, borderRadius: 12, border: "1px solid " + C.grid, background: C.navy, color: "#fff", cursor: "pointer" }}>
+              📖
+            </button>
           </div>
         </header>
 
@@ -1273,6 +1279,7 @@ export default function App() {
         </footer>
       </div>
       {adOpen && adCfg && <AdModal cfg={adCfg} U={U} onDone={finishAd} onClose={() => setAdOpen(false)} />}
+      {glossOpen && <GlossaryModal lang={lang} onClose={() => setGlossOpen(false)} />}
     </div>
   );
 }
