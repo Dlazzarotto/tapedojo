@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { aggregateStats, missingProfiles } from "@/lib/adminStats";
+import { aggregateStats, missingProfiles, jwtRole } from "@/lib/adminStats";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +26,14 @@ export async function GET(req) {
   ]);
   // avisos: tabela/coluna ausente deixa de ser silêncio — vira alerta nomeado
   const warns = [];
+  // autodiagnóstico da chave: a service_role carrega role "service_role" no próprio token
+  const role = jwtRole(service);
+  if (role && role !== "service_role") {
+    warns.push('⚠ CHAVE ERRADA: a variável SUPABASE_SERVICE_ROLE_KEY contém a chave "' + role + '" (a pública). Supabase → Settings → API → service_role → botão REVEAL → copiar → colar na Vercel → Redeploy.');
+  }
+  if (authRes && authRes.error) {
+    warns.push("auth.admin: " + authRes.error.message + " — sintoma clássico de chave sem poder no lugar da service_role.");
+  }
   if (profiles.error) warns.push("td_profiles: " + profiles.error.message + " → rode tapedojo-admin-dash.sql");
   if (states.error) warns.push("td_state: " + states.error.message + " → rode supabase/fase2a.sql");
   if (purchases.error) warns.push("td_purchases: " + purchases.error.message + " → rode o schema.sql completo");
