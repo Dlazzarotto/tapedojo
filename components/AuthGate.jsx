@@ -112,6 +112,19 @@ export default function AuthGate({ children }) {
     return T.errGeneric;
   }
 
+  function pingCockpit() {
+    // sino do mestre: avisa o Dashboard em tempo real que entrou aluno novo
+    try {
+      const ch = supabase.channel("td-live");
+      ch.subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          ch.send({ type: "broadcast", event: "signup", payload: { at: Date.now() } });
+          setTimeout(() => { try { supabase.removeChannel(ch); } catch (e) { /* ok */ } }, 2000);
+        }
+      });
+    } catch (e) { /* melhor esforço */ }
+  }
+
   async function doSignup() {
     setErr(null); setMsg(null);
     if (!name.trim()) { setErr(T.errName); return; }
@@ -123,6 +136,7 @@ export default function AuthGate({ children }) {
     });
     setBusy(false);
     if (error) { setErr(mapErr(error)); return; }
+    pingCockpit();
     if (!data.session) setMsg(T.checkMail);
   }
 

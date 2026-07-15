@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { pieArc } from "@/lib/adminStats";
+import { supabase } from "@/lib/supabase";
 
 const AdminMap = dynamic(() => import("@/components/AdminMap"), { ssr: false, loading: () => <p style={{ color: "#A9AEDB" }}>Carregando o mapa…</p> });
 
@@ -17,13 +18,23 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [err, setErr] = useState(null);
   const [drill, setDrill] = useState(null);
+  const [pop, setPop] = useState(null);
+  const prevTotal = useRef(null);
+  const popTimer = useRef(null);
 
   async function load(tk) {
     setErr(null);
     try {
-      const r = await fetch("/api/admin/stats", { headers: { "x-dojo-token": tk } });
+      const r = await fetch("/api/admin/stats?t=" + Date.now(), { cache: "no-store", headers: { "x-dojo-token": tk } });
       const j = await r.json();
       if (!r.ok) { setErr(j); setStats(null); return; }
+      if (prevTotal.current !== null && j.total > prevTotal.current) {
+        const novo = j.recent && j.recent[0] ? j.recent[0].name : "";
+        setPop("🔔 +" + (j.total - prevTotal.current) + " inscrito" + (j.total - prevTotal.current > 1 ? "s" : "") + (novo ? ": " + novo : ""));
+        if (popTimer.current) clearTimeout(popTimer.current);
+        popTimer.current = setTimeout(() => setPop(null), 8000);
+      }
+      prevTotal.current = j.total;
       setStats(j);
       try { sessionStorage.setItem("td:dash:token", tk); } catch (e) { /* ok */ }
     } catch (e) { setErr({ error: "network" }); }
@@ -32,8 +43,19 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!saved) return;
     load(saved);
-    const t = setInterval(() => load(saved), 30000);
-    return () => clearInterval(t);
+    const t = setInterval(() => load(saved), 10000);
+    const onFocus = () => load(saved);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    // sino em tempo real: cadastro novo → busca imediata
+    const ch = supabase.channel("td-live");
+    ch.on("broadcast", { event: "signup" }, () => load(saved)).subscribe();
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+      try { supabase.removeChannel(ch); } catch (e) { /* ok */ }
+    };
   }, [saved]);
 
   const input = { width: "100%", fontSize: 17, padding: "12px 14px", borderRadius: 12, border: "2px solid " + C.grid, background: C.bg, color: C.text };
@@ -88,6 +110,12 @@ export default function AdminDashboard() {
 
   return (
     <div>
+      {pop && (
+        <div style={{ ...cardS, borderColor: C.buy, marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 22 }}>🔔</span>
+          <span style={{ color: C.buy, fontWeight: 900, fontSize: 18 }}>{pop}</span>
+        </div>
+      )}
       {stats.warns && stats.warns.length > 0 && (
         <div style={{ ...cardS, borderColor: C.orange, marginBottom: 14 }}>
           <p style={{ color: C.orange, fontWeight: 800, marginBottom: 6 }}>⚠ Migrações pendentes no banco</p>
@@ -178,7 +206,7 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
-      <p style={{ color: C.muted, fontSize: 13.5, marginTop: 10 }}>Atualiza sozinho a cada 30s · build {stats.version || "antigo"} · alvo {stats.target || "?"} · cofre {stats.cofre ?? "?"} · perfis {stats.perfisRaw ?? "?"}</p>
+      <p style={{ color: C.muted, fontSize: 13.5, marginTop: 10 }}>Tempo real: sino de cadastro + varredura 10s + ao focar a aba · build {stats.version || "antigo"} · alvo {stats.target || "?"} · cofre {stats.cofre ?? "?"} · perfis {stats.perfisRaw ?? "?"} · chave: {stats.keyKind || "?"}</p>
     </div>
   );
 }

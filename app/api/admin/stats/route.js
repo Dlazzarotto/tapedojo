@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { aggregateStats, missingProfiles, jwtRole, jwtRef, authToProfiles } from "@/lib/adminStats";
+import { aggregateStats, missingProfiles, jwtRole, jwtRef, authToProfiles, keyKind } from "@/lib/adminStats";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +77,8 @@ export async function GET(req) {
   });
   return Response.json({
     ...stats, warns,
-    version: "diag-4",
+    version: "diag-5",
+    keyKind: keyKind(service),
     target: url.replace("https://", "").split(".")[0],
     cofre: authUsersCount,
     perfisRaw: (profiles.data || []).length,
