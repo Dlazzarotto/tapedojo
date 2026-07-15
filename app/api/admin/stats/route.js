@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { aggregateStats, missingProfiles, jwtRole } from "@/lib/adminStats";
+import { aggregateStats, missingProfiles, jwtRole, jwtRef } from "@/lib/adminStats";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +27,23 @@ export async function GET(req) {
   // avisos: tabela/coluna ausente deixa de ser silêncio — vira alerta nomeado
   const warns = [];
   // autodiagnóstico da chave: a service_role carrega role "service_role" no próprio token
+  if (service.startsWith("sb_publishable_")) {
+    warns.push("⚠ CHAVE ERRADA: o valor em SUPABASE_SERVICE_ROLE_KEY é a sb_publishable_ (PÚBLICA, sem poder). A secreta começa com sb_secret_ (aba API Keys) ou é o JWT service_role (aba legada, botão Reveal). Troque na Vercel e faça Redeploy no item do TOPO.");
+  }
   const role = jwtRole(service);
   if (role && role !== "service_role") {
     warns.push('⚠ CHAVE ERRADA: a variável SUPABASE_SERVICE_ROLE_KEY contém a chave "' + role + '" (a pública). Supabase → Settings → API → service_role → botão REVEAL → copiar → colar na Vercel → Redeploy.');
   }
   if (authRes && authRes.error) {
     warns.push("auth.admin: " + authRes.error.message + " — sintoma clássico de chave sem poder no lugar da service_role.");
+  }
+  const ref = jwtRef(service);
+  if (ref && !url.includes(ref)) {
+    warns.push('⚠ CHAVE DE OUTRO PROJETO: o token pertence ao projeto "' + ref + '", mas esta rota fala com ' + url + '. Copie a service_role DESTE projeto (Settings → API → Reveal) e faça Redeploy.');
+  }
+  const authUsersCount = (authRes && authRes.data && authRes.data.users ? authRes.data.users.length : 0);
+  if (warns.length === 0 && authUsersCount === 0) {
+    warns.push("O cofre de logins retornou vazio — se há usuários em Authentication → Users, a chave em uso não tem poder de admin (anon no lugar da service_role) ou é de outro projeto.");
   }
   if (profiles.error) warns.push("td_profiles: " + profiles.error.message + " → rode tapedojo-admin-dash.sql");
   if (states.error) warns.push("td_state: " + states.error.message + " → rode supabase/fase2a.sql");
@@ -60,5 +71,11 @@ export async function GET(req) {
     cancellations: cancellations.data || [],
     now: Date.now(),
   });
-  return Response.json({ ...stats, warns });
+  return Response.json({
+    ...stats, warns,
+    version: "diag-3",
+    target: url.replace("https://", "").split(".")[0],
+    cofre: authUsersCount,
+    perfisRaw: (profiles.data || []).length,
+  });
 }

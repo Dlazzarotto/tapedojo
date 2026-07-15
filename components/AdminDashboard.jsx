@@ -178,7 +178,7 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
-      <p style={{ color: C.muted, fontSize: 13.5, marginTop: 10 }}>Atualiza sozinho a cada 30s · fonte: Supabase via rota segura (service_role no servidor).</p>
+      <p style={{ color: C.muted, fontSize: 13.5, marginTop: 10 }}>Atualiza sozinho a cada 30s · build {stats.version || "antigo"} · alvo {stats.target || "?"} · cofre {stats.cofre ?? "?"} · perfis {stats.perfisRaw ?? "?"}</p>
     </div>
   );
 }
