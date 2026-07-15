@@ -8,7 +8,10 @@ function gate(req) {
   if (!token || !service) return { err: Response.json({ error: "setup" }, { status: 503 }) };
   if (req.headers.get("x-dojo-token") !== token) return { err: Response.json({ error: "unauthorized" }, { status: 401 }) };
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://vdhhnmzmnjjwdxawuybt.supabase.co";
-  return { db: createClient(url, service, { auth: { persistSession: false } }) };
+  return { db: createClient(url, service, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: "Bearer " + service } },
+  }) };
 }
 
 export async function GET(req) {

@@ -16,7 +16,10 @@ export async function GET(req) {
   if (req.headers.get("x-dojo-token") !== token) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
-  const db = createClient(url, service, { auth: { persistSession: false } });
+  const db = createClient(url, service, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: "Bearer " + service } },
+  });
   const [profiles, states, purchases, cancellations, authRes] = await Promise.all([
     db.from("td_profiles").select("user_id, display_name, tier, subscription_status, country, created_at").limit(5000),
     db.from("td_state").select("updated_at").limit(5000),
@@ -77,7 +80,7 @@ export async function GET(req) {
   });
   return Response.json({
     ...stats, warns,
-    version: "diag-5",
+    version: "curado",
     keyKind: keyKind(service),
     target: url.replace("https://", "").split(".")[0],
     cofre: authUsersCount,
