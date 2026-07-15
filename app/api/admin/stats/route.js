@@ -24,14 +24,25 @@ export async function GET(req) {
     db.from("td_cancellations").select("id").limit(5000),
     db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
   ]);
-  // auto-cura: todo login no cofre ganha perfil (cadastros de janelas quebradas incluídos)
+  // avisos: tabela/coluna ausente deixa de ser silêncio — vira alerta nomeado
+  const warns = [];
+  if (profiles.error) warns.push("td_profiles: " + profiles.error.message + " → rode tapedojo-admin-dash.sql");
+  if (states.error) warns.push("td_state: " + states.error.message + " → rode supabase/fase2a.sql");
+  if (purchases.error) warns.push("td_purchases: " + purchases.error.message + " → rode o schema.sql completo");
+  if (cancellations.error) warns.push("td_cancellations: " + cancellations.error.message + " → rode o schema.sql completo");
+
+  // auto-cura: todo login no cofre ganha perfil (upsert tolerante — cria só quem falta)
   let allProfiles = profiles.data || [];
   try {
     const authUsers = (authRes && authRes.data && authRes.data.users) || [];
     const missing = missingProfiles(authUsers, allProfiles);
     if (missing.length) {
-      const ins = await db.from("td_profiles").insert(missing).select("user_id, display_name, tier, subscription_status, country, created_at");
+      const ins = await db
+        .from("td_profiles")
+        .upsert(missing, { onConflict: "user_id", ignoreDuplicates: true })
+        .select("user_id, display_name, tier, subscription_status, country, created_at");
       if (ins.data) allProfiles = allProfiles.concat(ins.data);
+      if (ins.error) warns.push("auto-cura: " + ins.error.message);
     }
   } catch (e) { /* melhor esforço */ }
   const stats = aggregateStats({
@@ -41,5 +52,5 @@ export async function GET(req) {
     cancellations: cancellations.data || [],
     now: Date.now(),
   });
-  return Response.json(stats);
+  return Response.json({ ...stats, warns });
 }

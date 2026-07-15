@@ -88,6 +88,14 @@ export default function AdminDashboard() {
 
   return (
     <div>
+      {stats.warns && stats.warns.length > 0 && (
+        <div style={{ ...cardS, borderColor: C.orange, marginBottom: 14 }}>
+          <p style={{ color: C.orange, fontWeight: 800, marginBottom: 6 }}>⚠ Migrações pendentes no banco</p>
+          {stats.warns.map((w, i) => (
+            <p key={i} style={{ color: C.muted, fontSize: 14.5 }}>{w}</p>
+          ))}
+        </div>
+      )}
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 14 }}>
         <div style={cardS}><p style={{ color: C.muted, fontSize: 13.5, fontWeight: 800, textTransform: "uppercase" }}>Inscritos</p>
