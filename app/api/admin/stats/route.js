@@ -18,7 +18,10 @@ export async function GET(req) {
   }
   const db = createClient(url, service, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: "Bearer " + service } },
+    // Chave legada (JWT): forçar Authorization — é ele quem decide o RLS.
+    // Chave nova (sb_secret_): NÃO pôr no Authorization (não é JWT);
+    // o gateway injeta o papel service_role a partir do apikey.
+    global: { headers: service.startsWith("sb_") ? {} : { Authorization: "Bearer " + service } },
   });
   const [profiles, states, purchases, cancellations, authRes] = await Promise.all([
     db.from("td_profiles").select("user_id, display_name, tier, subscription_status, country, created_at").limit(5000),

@@ -11,7 +11,10 @@ function gate(req) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://vdhhnmzmnjjwdxawuybt.supabase.co";
   return { db: createClient(url, service, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: "Bearer " + service } },
+    // Chave legada (JWT): forçar Authorization — é ele quem decide o RLS.
+    // Chave nova (sb_secret_): NÃO pôr no Authorization (não é JWT);
+    // o gateway injeta o papel service_role a partir do apikey.
+    global: { headers: service.startsWith("sb_") ? {} : { Authorization: "Bearer " + service } },
   }) };
 }
 
